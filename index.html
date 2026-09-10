@@ -27,10 +27,14 @@
         .flex-1 { flex: 1; min-width: 180px; }
 
         input, select, button { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; }
+        .search-input { background-color: #f1f5f9; border: 1px solid #94a3b8; }
+        .search-input:focus { background-color: #ffffff; border-color: var(--primary); outline: none; }
+
         button { background-color: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
         button:hover { background-color: var(--primary-dark); }
         button.success { background-color: var(--secondary); }
         button.danger { background-color: var(--danger); }
+        button.warning { background-color: var(--warning); color: #fff; }
 
         nav { display: flex; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
         nav button { padding: 10px; font-size: 14px; background: #e2e8f0; color: var(--text); flex: 1; min-width: 120px; }
@@ -60,6 +64,7 @@
         .remember-group { display: flex; align-items: center; gap: 8px; margin-bottom: 15px; }
         .remember-group input { width: auto; margin-bottom: 0; cursor: pointer; }
         .remember-group label { font-size: 14px; color: #475569; cursor: pointer; }
+        .btn-group-actions { display: flex; gap: 5px; }
     </style>
 </head>
 <body>
@@ -144,6 +149,10 @@
         <div id="tab-fiado" class="tab-content hidden">
             <div class="card">
                 <h3>Controle de Fiado</h3>
+                
+                <!-- BUSCA DE CLIENTES FIADO -->
+                <input type="text" id="busca-fiado" class="search-input" placeholder="🔍 Buscar cliente no fiado..." oninput="renderAll()">
+
                 <table>
                     <thead>
                         <tr>
@@ -160,7 +169,7 @@
         <!-- ABA 3: ESTOQUE -->
         <div id="tab-estoque" class="tab-content hidden">
             <div class="card">
-                <h3>Cadastrar / Modificar Produto</h3>
+                <h3 id="titulo-form-produto">Cadastrar / Modificar Produto</h3>
                 <input type="text" id="prod-nome" placeholder="Nome do Produto (Ex: Arroz 1kg)">
                 <div class="flex">
                     <input type="number" id="prod-custo" placeholder="Preço de Custo (R$)" step="0.01">
@@ -175,11 +184,18 @@
                     <img id="preview-foto" src="" class="img-preview hidden" alt="Prévia da foto">
                 </div>
 
-                <button onclick="salvarProduto()">Salvar Produto</button>
+                <div class="flex">
+                    <button onclick="salvarProduto()" id="btn-salvar-produto" class="flex-1">Salvar Produto</button>
+                    <button onclick="cancelarEdicaoProduto()" id="btn-cancelar-edicao" class="danger flex-1 hidden">Cancelar Edição</button>
+                </div>
             </div>
 
             <div class="card">
                 <h3>Produtos Cadastrados</h3>
+                
+                <!-- BUSCA DE PRODUTOS NO ESTOQUE -->
+                <input type="text" id="busca-produto" class="search-input" placeholder="🔍 Buscar produto no estoque..." oninput="renderAll()">
+
                 <table>
                     <thead>
                         <tr>
@@ -188,7 +204,7 @@
                             <th>Custo</th>
                             <th>Venda</th>
                             <th>Qtd</th>
-                            <th>Ação</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="lista-produtos"></tbody>
@@ -199,7 +215,7 @@
         <!-- ABA 4: RELATÓRIO E BALANÇO -->
         <div id="tab-relatorio" class="tab-content hidden">
             <div class="card">
-                <h3>📊 Balanço Financeiro e Filtro de Período</h3>
+                <h3>📊 Balanço Financeiro e Filtros</h3>
                 
                 <!-- FILTRO DE PERÍODO -->
                 <div class="filter-group">
@@ -268,7 +284,11 @@
             </div>
 
             <div class="card">
-                <h3>Histórico de Transações do Período</h3>
+                <h3>Histórico de Transações</h3>
+                
+                <!-- BUSCA NO HISTÓRICO DE TRANSAÇÕES -->
+                <input type="text" id="busca-historico" class="search-input" placeholder="🔍 Buscar por produto, cliente ou tipo no histórico..." oninput="renderAll()">
+
                 <table>
                     <thead>
                         <tr>
@@ -291,6 +311,7 @@
     // ESTADO DA APLICAÇÃO
     let currentUser = null;
     let tempFotoBase64 = '';
+    let editIndex = -1; // -1 indica novo produto; >=0 indica edição de produto existente
     
     let db = {
         users: JSON.parse(localStorage.getItem('tsg_users')) || [],
@@ -427,7 +448,7 @@
         event.target.classList.add('active');
     }
 
-    // ESTOQUE
+    // CADASTRO / EDIÇÃO DE ESTOQUE
     function salvarProduto() {
         const nome = document.getElementById('prod-nome').value.trim();
         const custo = parseFloat(document.getElementById('prod-custo').value);
@@ -440,24 +461,71 @@
         }
 
         const placeholderFoto = "https://via.placeholder.com/80?text=Sem+Foto";
-        const fotoFinal = tempFotoBase64 || placeholderFoto;
 
-        const index = db.produtos.findIndex(p => p.nome.toLowerCase() === nome.toLowerCase());
-        if(index >= 0) {
-            db.produtos[index] = { 
-                nome, 
-                custo, 
-                venda, 
-                qtd, 
-                foto: tempFotoBase64 || db.produtos[index].foto || placeholderFoto 
+        if (editIndex >= 0) {
+            // MODO EDIÇÃO
+            const fotoExistente = db.produtos[editIndex].foto;
+            db.produtos[editIndex] = {
+                nome,
+                custo,
+                venda,
+                qtd,
+                foto: tempFotoBase64 || fotoExistente || placeholderFoto
             };
+            alert("Produto atualizado com sucesso!");
         } else {
-            db.produtos.push({ nome, custo, venda, qtd, foto: fotoFinal });
+            // MODO CADASTRO NOVO
+            const fotoFinal = tempFotoBase64 || placeholderFoto;
+            const indexExistente = db.produtos.findIndex(p => p.nome.toLowerCase() === nome.toLowerCase());
+            
+            if(indexExistente >= 0) {
+                db.produtos[indexExistente] = { 
+                    nome, 
+                    custo, 
+                    venda, 
+                    qtd, 
+                    foto: tempFotoBase64 || db.produtos[indexExistente].foto || placeholderFoto 
+                };
+            } else {
+                db.produtos.push({ nome, custo, venda, qtd, foto: fotoFinal });
+            }
+            alert("Produto cadastrado com sucesso!");
         }
 
         saveData();
+        cancelarEdicaoProduto();
         renderAll();
-        
+    }
+
+    function editarProduto(index) {
+        const prod = db.produtos[index];
+        if (!prod) return;
+
+        editIndex = index;
+        document.getElementById('prod-nome').value = prod.nome;
+        document.getElementById('prod-custo').value = prod.custo;
+        document.getElementById('prod-venda').value = prod.venda;
+        document.getElementById('prod-qtd').value = prod.qtd;
+
+        // Prévia da Foto
+        if (prod.foto) {
+            const preview = document.getElementById('preview-foto');
+            preview.src = prod.foto;
+            preview.classList.remove('hidden');
+            tempFotoBase64 = prod.foto;
+        }
+
+        document.getElementById('titulo-form-produto').innerText = `✏️ Editando Produto: ${prod.nome}`;
+        document.getElementById('btn-salvar-produto').innerText = "Atualizar Produto";
+        document.getElementById('btn-salvar-produto').classList.add('warning');
+        document.getElementById('btn-cancelar-edicao').classList.remove('hidden');
+
+        // Rolar até o formulário
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelarEdicaoProduto() {
+        editIndex = -1;
         document.getElementById('prod-nome').value = '';
         document.getElementById('prod-custo').value = '';
         document.getElementById('prod-venda').value = '';
@@ -465,6 +533,11 @@
         document.getElementById('prod-foto').value = '';
         document.getElementById('preview-foto').classList.add('hidden');
         tempFotoBase64 = '';
+
+        document.getElementById('titulo-form-produto').innerText = "Cadastrar / Modificar Produto";
+        document.getElementById('btn-salvar-produto').innerText = "Salvar Produto";
+        document.getElementById('btn-salvar-produto').classList.remove('warning');
+        document.getElementById('btn-cancelar-edicao').classList.add('hidden');
     }
 
     function deletarProduto(index) {
@@ -540,7 +613,7 @@
         alert("Venda realizada com sucesso!");
     }
 
-    // GESTÃO DE FIADO (CORRIGIDO PARA NÃO DUPLICAR FATURAMENTO/LUCRO)
+    // GESTÃO DE FIADO
     function pagarFiado(cliente) {
         const valorDevido = db.fiados[cliente] || 0;
         const valorPagar = parseFloat(prompt(`Quanto ${cliente} está pagando?\nDevido Atual: R$ ${valorDevido.toFixed(2)}`));
@@ -564,14 +637,14 @@
             db.fiados[cliente] -= valorPagar;
             if(db.fiados[cliente] <= 0.001) delete db.fiados[cliente];
 
-            // Registrar entrada de caixa do fiado (Sem somar como "Venda de Produto" nova)
+            // Registrar entrada no histórico
             db.vendas.push({
                 timestamp: new Date().getTime(),
                 data: new Date().toLocaleString('pt-BR'),
                 produto: 'Recebimento de Fiado',
                 qtd: 1,
                 total: valorPagar,
-                lucro: 0, // Lucro zero pois o lucro já foi registrado na venda inicial do produto
+                lucro: 0,
                 tipo: 'Pagamento Fiado',
                 formaPagamento: formaRecebimento,
                 cliente
@@ -583,7 +656,7 @@
         }
     }
 
-    // FILTRO DE DATAS DO RELATÓRIO
+    // FILTRO DE DATAS E BUSCAS DO RELATÓRIO
     function toggleFiltroDatas() {
         const op = document.getElementById('filtro-periodo').value;
         const customGroup = document.getElementById('grupo-datas-custom');
@@ -592,11 +665,11 @@
         renderAll();
     }
 
-    function filtrarVendasPorPeriodo() {
+    function filtrarVendasPorPeriodo(vendasList) {
         const op = document.getElementById('filtro-periodo').value;
         const agora = new Date();
 
-        return db.vendas.filter(v => {
+        return vendasList.filter(v => {
             const dataVenda = new Date(v.timestamp || 0);
 
             if (op === 'hoje') {
@@ -620,44 +693,68 @@
         });
     }
 
-    // RENDERIZAÇÃO DA INTERFACE COM CÁLCULO FINANCEIRO CORRETO
+    // RENDERIZAÇÃO GERAL DA INTERFACE
     function renderAll() {
-        // Renderizar Combo de Vendas
+        // 1. Renderizar Combo do Caixa
         const selectProd = document.getElementById('venda-produto');
         selectProd.innerHTML = db.produtos.map(p => `<option value="${p.nome}">${p.nome} (Estoque: ${p.qtd}) - R$ ${p.venda.toFixed(2)}</option>`).join('');
         atualizarPrecoVenda();
 
-        // Renderizar Lista de Produtos com Fotos
-        document.getElementById('lista-produtos').innerHTML = db.produtos.map((p, i) => `
-            <tr>
-                <td><img src="${p.foto}" class="img-thumb" alt="${p.nome}"></td>
-                <td><b>${p.nome}</b></td>
-                <td>R$ ${p.custo.toFixed(2)}</td>
-                <td>R$ ${p.venda.toFixed(2)}</td>
-                <td>${p.qtd}</td>
-                <td><button onclick="deletarProduto(${i})" class="danger" style="padding: 4px 8px; width: auto;">Excluir</button></td>
-            </tr>
-        `).join('');
+        // 2. Renderizar Tabela de Produtos (Com Busca e Botão de Editar)
+        const buscaProdTermo = (document.getElementById('busca-produto')?.value || '').toLowerCase();
+        const produtosFiltrados = db.produtos.filter(p => p.nome.toLowerCase().includes(buscaProdTermo));
 
-        // Renderizar Fiados Pendentes
+        document.getElementById('lista-produtos').innerHTML = produtosFiltrados.map((p) => {
+            const originalIndex = db.produtos.indexOf(p);
+            return `
+                <tr>
+                    <td><img src="${p.foto}" class="img-thumb" alt="${p.nome}"></td>
+                    <td><b>${p.nome}</b></td>
+                    <td>R$ ${p.custo.toFixed(2)}</td>
+                    <td>R$ ${p.venda.toFixed(2)}</td>
+                    <td>${p.qtd}</td>
+                    <td>
+                        <div class="btn-group-actions">
+                            <button onclick="editarProduto(${originalIndex})" class="warning" style="padding: 4px 8px; width: auto;">Editar</button>
+                            <button onclick="deletarProduto(${originalIndex})" class="danger" style="padding: 4px 8px; width: auto;">Excluir</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        // 3. Renderizar Caderno de Fiado (Com Busca)
+        const buscaFiadoTermo = (document.getElementById('busca-fiado')?.value || '').toLowerCase();
         const listaFiado = document.getElementById('lista-fiado');
         listaFiado.innerHTML = '';
         let totalFiadoPendente = 0;
 
         for(let cliente in db.fiados) {
             totalFiadoPendente += db.fiados[cliente];
-            listaFiado.innerHTML += `
-                <tr>
-                    <td><b>${cliente}</b></td>
-                    <td style="color: var(--danger); font-weight: bold;">R$ ${db.fiados[cliente].toFixed(2)}</td>
-                    <td><button onclick="pagarFiado('${cliente}')" class="success" style="padding: 4px 8px; width: auto;">Abater / Pagar</button></td>
-                </tr>
-            `;
+            if (cliente.toLowerCase().includes(buscaFiadoTermo)) {
+                listaFiado.innerHTML += `
+                    <tr>
+                        <td><b>${cliente}</b></td>
+                        <td style="color: var(--danger); font-weight: bold;">R$ ${db.fiados[cliente].toFixed(2)}</td>
+                        <td><button onclick="pagarFiado('${cliente}')" class="success" style="padding: 4px 8px; width: auto;">Abater / Pagar</button></td>
+                    </tr>
+                `;
+            }
         }
 
-        // Renderizar Relatório Filtrado
-        const vendasFiltradas = filtrarVendasPorPeriodo();
-        
+        // 4. Renderizar Relatório Filtrado por Data e Busca de Texto
+        let vendasFiltradas = filtrarVendasPorPeriodo(db.vendas);
+        const buscaHistTermo = (document.getElementById('busca-historico')?.value || '').toLowerCase();
+
+        if (buscaHistTermo) {
+            vendasFiltradas = vendasFiltradas.filter(v => 
+                v.produto.toLowerCase().includes(buscaHistTermo) ||
+                (v.cliente && v.cliente.toLowerCase().includes(buscaHistTermo)) ||
+                v.tipo.toLowerCase().includes(buscaHistTermo) ||
+                (v.formaPagamento && v.formaPagamento.toLowerCase().includes(buscaHistTermo))
+            );
+        }
+
         let totalVendas = 0;
         let totalLucro = 0;
         let totalDinheiro = 0;
@@ -669,13 +766,11 @@
         document.getElementById('lista-historico').innerHTML = vendasFiltradas.slice().reverse().map(v => {
             const isPagamentoFiado = (v.tipo === 'Pagamento Fiado');
 
-            // 1. APENAS VENDAS DE MERCADORIAS SOMAM EM VENDAS TOTAIS E LUCRO (Sem duplicar ao receber fiado)
             if (!isPagamentoFiado) {
                 totalVendas += v.total;
                 totalLucro += v.lucro;
             }
 
-            // 2. SOMATÓRIO DAS ENTRADAS EFETIVAS NO CAIXA
             if (v.tipo === 'Dinheiro') {
                 totalDinheiro += v.total;
             } else if (v.tipo === 'PIX') {
@@ -687,7 +782,6 @@
             } else if (v.tipo === 'Fiado') {
                 totalFiadoGerado += v.total;
             } else if (isPagamentoFiado) {
-                // Pagamento de Fiado entra na forma em que foi pago (padrão Dinheiro)
                 const forma = v.formaPagamento || 'Dinheiro';
                 if (forma === 'PIX') totalPix += v.total;
                 else if (forma === 'Cartão de Crédito') totalCredito += v.total;
@@ -695,7 +789,6 @@
                 else totalDinheiro += v.total;
             }
 
-            // Classe da Tag visual
             let badgeClass = 'badge-dinheiro';
             if (v.tipo === 'PIX') badgeClass = 'badge-pix';
             else if (v.tipo === 'Cartão de Crédito') badgeClass = 'badge-credito';
@@ -715,12 +808,12 @@
             `;
         }).join('');
 
-        // Atualizar Indicadores Globais
+        // Indicadores Globais
         document.getElementById('stat-vendas').innerText = `R$ ${totalVendas.toFixed(2)}`;
         document.getElementById('stat-lucro').innerText = `R$ ${totalLucro.toFixed(2)}`;
         document.getElementById('stat-fiado-pendente').innerText = `R$ ${totalFiadoPendente.toFixed(2)}`;
 
-        // Atualizar Detalhamento de Entradas no Caixa
+        // Detalhamento de Entradas em Caixa
         document.getElementById('stat-dinheiro').innerText = `R$ ${totalDinheiro.toFixed(2)}`;
         document.getElementById('stat-pix').innerText = `R$ ${totalPix.toFixed(2)}`;
         document.getElementById('stat-credito').innerText = `R$ ${totalCredito.toFixed(2)}`;

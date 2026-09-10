@@ -57,6 +57,9 @@
         .img-preview { max-height: 140px; border-radius: 8px; border: 1px solid #cbd5e1; margin-top: 5px; object-fit: cover; }
         
         .filter-group { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
+        .remember-group { display: flex; align-items: center; gap: 8px; margin-bottom: 15px; }
+        .remember-group input { width: auto; margin-bottom: 0; cursor: pointer; }
+        .remember-group label { font-size: 14px; color: #475569; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -71,6 +74,12 @@
             <input type="text" id="nome" placeholder="Seu Nome Completo" required>
             <input type="email" id="email" placeholder="Seu E-mail" required>
             <input type="password" id="password" placeholder="Sua Senha" required>
+            
+            <div class="remember-group">
+                <input type="checkbox" id="remember-me" checked>
+                <label for="remember-me">Lembrar meu usuário (permanecer conectado neste aparelho)</label>
+            </div>
+
             <button type="submit" id="auth-btn">Entrar / Cadastrar</button>
         </form>
     </div>
@@ -160,7 +169,7 @@
                 </div>
 
                 <label style="font-size: 14px; font-weight: bold; margin-bottom: 5px; display: block;">Foto do Produto (Câmera ou Galeria):</label>
-                <input type="file" id="prod-foto" accept="image/*" capture="environment" onchange="processarFoto(event)">
+                <input type="file" id="prod-foto" accept="image/*" onchange="processarFoto(event)">
                 
                 <div style="text-align: center; margin-bottom: 10px;">
                     <img id="preview-foto" src="" class="img-preview hidden" alt="Prévia da foto">
@@ -290,12 +299,29 @@
         fiados: JSON.parse(localStorage.getItem('tsg_fiados')) || {}
     };
 
+    // SALVAMENTO COM TRATAMENTO DE MEMÓRIA DE SEGURANÇA
     function saveData() {
-        localStorage.setItem('tsg_users', JSON.stringify(db.users));
-        localStorage.setItem('tsg_produtos', JSON.stringify(db.produtos));
-        localStorage.setItem('tsg_vendas', JSON.stringify(db.vendas));
-        localStorage.setItem('tsg_fiados', JSON.stringify(db.fiados));
+        try {
+            localStorage.setItem('tsg_users', JSON.stringify(db.users));
+            localStorage.setItem('tsg_produtos', JSON.stringify(db.produtos));
+            localStorage.setItem('tsg_vendas', JSON.stringify(db.vendas));
+            localStorage.setItem('tsg_fiados', JSON.stringify(db.fiados));
+        } catch (e) {
+            alert("Atenção: O limite de armazenamento do navegador foi atingido. Remova produtos antigos ou imagens pesadas.");
+            console.error("Erro ao salvar dados no LocalStorage:", e);
+        }
     }
+
+    // VERIFICAÇÃO AUTOMÁTICA DE SESSÃO SALVA (AUTO-LOGIN)
+    window.addEventListener('DOMContentLoaded', () => {
+        const savedEmail = localStorage.getItem('tsg_session');
+        if (savedEmail) {
+            const user = db.users.find(u => u.email === savedEmail);
+            if (user) {
+                iniciarSessao(user);
+            }
+        }
+    });
 
     // AUTENTICAÇÃO
     function handleAuth(e) {
@@ -303,6 +329,7 @@
         const nome = document.getElementById('nome').value.trim();
         const email = document.getElementById('email').value.trim();
         const pass = document.getElementById('password').value.trim();
+        const remember = document.getElementById('remember-me').checked;
 
         let user = db.users.find(u => u.email === email);
         
@@ -322,6 +349,16 @@
             }
         }
 
+        if (remember) {
+            localStorage.setItem('tsg_session', user.email);
+        } else {
+            localStorage.removeItem('tsg_session');
+        }
+
+        iniciarSessao(user);
+    }
+
+    function iniciarSessao(user) {
         currentUser = user;
         document.getElementById('auth-screen').classList.add('hidden');
         document.getElementById('app-screen').classList.remove('hidden');
@@ -334,23 +371,53 @@
 
     function logout() {
         currentUser = null;
+        localStorage.removeItem('tsg_session');
         document.getElementById('auth-screen').classList.remove('hidden');
         document.getElementById('app-screen').classList.add('hidden');
     }
 
-    // PROCESSAMENTO DE IMAGEM DA CÂMERA / GALERIA
+    // OTIMIZAÇÃO E COMPRESSÃO DE IMAGEM DA CÂMERA / GALERIA (ESTABILIDADE DE MEMÓRIA)
     function processarFoto(event) {
         const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                tempFotoBase64 = e.target.result;
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                // Redimensiona mantendo proporção para no máximo 300px (Reduz o uso de memória em ~98%)
+                const canvas = document.createElement('canvas');
+                const maxDim = 300;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxDim) {
+                        height *= maxDim / width;
+                        width = maxDim;
+                    }
+                } else {
+                    if (height > maxDim) {
+                        width *= maxDim / height;
+                        height = maxDim;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Exporta como JPEG comprimido
+                tempFotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
                 const preview = document.getElementById('preview-foto');
                 preview.src = tempFotoBase64;
                 preview.classList.remove('hidden');
             };
-            reader.readAsDataURL(file);
-        }
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
     }
 
     // NAVEGAÇÃO
@@ -451,7 +518,7 @@
         const total = prod.venda * qtd;
         const lucro = (prod.venda - prod.custo) * qtd;
 
-        // Registrar Venda com Carimbo de Data/Hora Preciso (ISO Timestamp)
+        // Registrar Venda com Carimbo de Data/Hora Preciso
         const venda = {
             timestamp: new Date().getTime(),
             data: new Date().toLocaleString('pt-BR'),
@@ -532,7 +599,7 @@
                 const dFim = new Date(fim + "T23:59:59");
                 return dataVenda >= dIni && dataVenda <= dFim;
             }
-            return true; // 'todos'
+            return true;
         });
     }
 
@@ -592,7 +659,7 @@
             else if (v.tipo === 'Cartão de Crédito') totalCredito += v.total;
             else if (v.tipo === 'Cartão de Débito') totalDebito += v.total;
             else if (v.tipo === 'Fiado') totalFiadoGerado += v.total;
-            else if (v.tipo === 'Pagamento Fiado') totalDinheiro += v.total; // Entrou no caixa
+            else if (v.tipo === 'Pagamento Fiado') totalDinheiro += v.total;
 
             // Classe da Tag visual
             let badgeClass = 'badge-dinheiro';

@@ -6,124 +6,255 @@
     <title>TSG - Controle de Caixa, Fiado e Estoque</title>
     <style>
         :root {
-            --primary: #0284c7;
-            --primary-dark: #0369a1;
-            --secondary: #16a34a;
-            --danger: #dc2626;
-            --warning: #d97706;
-            --bg: #f8fafc;
-            --card: #ffffff;
-            --text: #0f172a;
+            /* PALETA OFICIAL ESTILO MERCADO LIVRE */
+            --ml-yellow: #ffe600;
+            --ml-yellow-dark: #e6cf00;
+            --ml-blue: #3483fa;
+            --ml-blue-dark: #2968c8;
+            --ml-green: #00a650;
+            --ml-green-light: #e6f7ee;
+            --ml-red: #f23d4f;
+            --ml-red-light: #fde8e9;
+            --ml-bg: #ebebeb;
+            --ml-card: #ffffff;
+            --ml-text: #333333;
+            --ml-muted: #666666;
+            --ml-border: #e6e6e6;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg); color: var(--text); padding: 15px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--ml-bg); color: var(--ml-text); padding-bottom: 30px; }
 
-        .container { max-width: 850px; margin: 0 auto; }
-        .card { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        /* CABEÇALHO SUPERIOR MERCADO LIVRE */
+        .top-header {
+            background-color: var(--ml-yellow);
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .header-content {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .brand-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #2d3277;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 0 15px; }
         
-        h1, h2, h3 { margin-bottom: 15px; color: var(--primary-dark); }
-        .flex { display: flex; gap: 10px; flex-wrap: wrap; }
-        .flex-1 { flex: 1; min-width: 180px; }
-
-        input, select, button { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; }
-        .search-input { background-color: #f1f5f9; border: 1px solid #94a3b8; }
-        .search-input:focus { background-color: #ffffff; border-color: var(--primary); outline: none; }
-
-        button { background-color: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button:hover { background-color: var(--primary-dark); }
-        button.success { background-color: var(--secondary); }
-        button.danger { background-color: var(--danger); }
-        button.warning { background-color: var(--warning); color: #fff; }
-
-        nav { display: flex; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
-        nav button { padding: 10px; font-size: 14px; background: #e2e8f0; color: var(--text); flex: 1; min-width: 120px; }
-        nav button.active { background: var(--primary); color: white; }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; vertical-align: middle; }
-        th { background-color: #f1f5f9; }
-
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
-        .badge-dinheiro { background: #dcfce7; color: #15803d; }
-        .badge-pix { background: #e0e7ff; color: #4338ca; }
-        .badge-credito { background: #fef3c7; color: #b45309; }
-        .badge-debito { background: #e0f2fe; color: #0369a1; }
-        .badge-fiado { background: #fef2f2; color: var(--danger); }
-        .badge-pagamento-fiado { background: #f0fdf4; color: var(--secondary); border: 1px solid #16a34a; }
+        /* CARTÕES ACOLHEDORES */
+        .card { 
+            background: var(--ml-card); 
+            padding: 22px; 
+            border-radius: var(--radius-md); 
+            box-shadow: var(--shadow-sm); 
+            margin-bottom: 18px; 
+            border: 1px solid rgba(0,0,0,0.04);
+        }
         
-        .hidden { display: none; }
-        .stat-box { background: #f1f5f9; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0; }
-        .stat-title { font-size: 12px; font-weight: bold; color: #64748b; text-transform: uppercase; }
-        .stat-value { font-size: 18px; font-weight: bold; margin-top: 4px; }
-
-        .img-thumb { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1; }
-        .img-preview { max-height: 140px; border-radius: 8px; border: 1px solid #cbd5e1; margin-top: 5px; object-fit: cover; }
+        h1, h2, h3, h4 { margin-bottom: 14px; color: var(--ml-text); font-weight: 700; }
+        h3 { font-size: 18px; display: flex; align-items: center; gap: 8px; }
         
-        .filter-group { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
+        /* ALINHAMENTO E SIMETRIA COM GRID */
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .grid-5 { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+        
+        .flex { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .flex-1 { flex: 1; min-width: 160px; }
+
+        /* INPUTS E FORMULÁRIOS PADRONIZADOS */
+        label { font-size: 13px; font-weight: 600; color: var(--ml-muted); margin-bottom: 4px; display: block; }
+        input, select, button { 
+            width: 100%; 
+            padding: 11px 14px; 
+            margin-bottom: 12px; 
+            border: 1px solid var(--ml-border); 
+            border-radius: var(--radius-sm); 
+            font-size: 15px; 
+            transition: all 0.2s ease;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--ml-blue);
+            box-shadow: 0 0 0 3px rgba(52, 131, 250, 0.2);
+        }
+        
+        .search-input { 
+            background-color: #f9f9f9; 
+            border: 1px solid #cccccc; 
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 12px center;
+            padding-left: 38px;
+        }
+
+        /* BOTÕES ESTILO MERCADO LIVRE */
+        button { 
+            background-color: var(--ml-blue); 
+            color: white; 
+            border: none; 
+            font-weight: 600; 
+            cursor: pointer; 
+            border-radius: var(--radius-sm);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        button:hover { background-color: var(--ml-blue-dark); }
+        button.success { background-color: var(--ml-green); }
+        button.success:hover { background-color: #008741; }
+        button.danger { background-color: var(--ml-red); }
+        button.danger:hover { background-color: #d62b3d; }
+        button.warning { background-color: #ff7733; color: #fff; }
+        button.secondary { background-color: #e2e8f0; color: var(--ml-text); }
+
+        /* NAV ABAS */
+        nav { 
+            display: flex; 
+            gap: 8px; 
+            margin-bottom: 20px; 
+            background: #ffffff;
+            padding: 6px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            overflow-x: auto;
+        }
+        nav button { 
+            padding: 12px 16px; 
+            font-size: 14px; 
+            background: transparent; 
+            color: var(--ml-muted); 
+            border-radius: var(--radius-sm);
+            margin-bottom: 0;
+            white-space: nowrap;
+            box-shadow: none;
+        }
+        nav button:hover { background: #f5f5f5; color: var(--ml-text); }
+        nav button.active { background: var(--ml-blue); color: white; font-weight: 700; }
+
+        /* TABELAS SIMÉTRICAS E ELEGANTES */
+        .table-responsive { overflow-x: auto; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 12px 14px; border-bottom: 1px solid var(--ml-border); font-size: 14px; vertical-align: middle; }
+        th { background-color: #f8f9fa; color: var(--ml-muted); font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+        tr:hover { background-color: #fcfcfc; }
+
+        /* BADGES / ETIQUETAS */
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; display: inline-block; }
+        .badge-dinheiro { background: #e6f7ee; color: var(--ml-green); }
+        .badge-pix { background: #e3f2fd; color: #0d47a1; }
+        .badge-credito { background: #fff8e1; color: #f57f17; }
+        .badge-debito { background: #e1f5fe; color: #0288d1; }
+        .badge-fiado { background: var(--ml-red-light); color: var(--ml-red); }
+        .badge-pagamento-fiado { background: #e6f7ee; color: var(--ml-green); border: 1px solid var(--ml-green); }
+        .badge-ok { background: #e6f7ee; color: var(--ml-green); }
+        .badge-repor { background: var(--ml-red-light); color: var(--ml-red); border: 1px solid #ffb3b8; }
+        
+        .hidden { display: none !important; }
+
+        /* STAT BOXES (PAINÉIS DE DADOS) */
+        .stat-box { 
+            background: #fdfdfd; 
+            padding: 14px; 
+            border-radius: var(--radius-sm); 
+            text-align: center; 
+            border: 1px solid var(--ml-border);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+        .stat-title { font-size: 11px; font-weight: 700; color: var(--ml-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-value { font-size: 18px; font-weight: 800; margin-top: 6px; color: var(--ml-text); }
+
+        .img-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid var(--ml-border); }
+        .img-preview { max-height: 130px; border-radius: 8px; border: 1px solid var(--ml-border); margin-top: 5px; object-fit: cover; }
+        
+        .filter-group { background: #f9f9f9; padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--ml-border); margin-bottom: 16px; }
         .remember-group { display: flex; align-items: center; gap: 8px; margin-bottom: 15px; }
         .remember-group input { width: auto; margin-bottom: 0; cursor: pointer; }
-        .remember-group label { font-size: 14px; color: #475569; cursor: pointer; }
-        .btn-group-actions { display: flex; gap: 5px; }
+        .remember-group label { font-size: 13px; color: var(--ml-muted); cursor: pointer; margin-bottom: 0; }
+        .btn-group-actions { display: flex; gap: 6px; }
     </style>
 </head>
 <body>
 
+<!-- TOPO ESTILO MERCADO LIVRE -->
+<header class="top-header">
+    <div class="header-content">
+        <div class="brand-title">
+            🛒 TSG Gestão Inteligente
+        </div>
+        <div id="user-header-info" class="hidden" style="display: flex; align-items: center; gap: 12px;">
+            <span id="user-display" style="font-weight: 700; font-size: 14px; color: #2d3277;"></span>
+            <button onclick="logout()" class="secondary" style="width: auto; padding: 6px 12px; margin-bottom: 0; font-size: 12px;">Sair</button>
+        </div>
+    </div>
+</header>
+
 <div class="container">
 
     <!-- TELA DE LOGIN / CADASTRO -->
-    <div id="auth-screen" class="card">
-        <h2>🔒 Acesso / Cadastro do Comerciante</h2>
-        <p style="margin-bottom: 15px; color: #64748b;">Informe seus dados para entrar ou criar sua conta.</p>
+    <div id="auth-screen" class="card" style="max-width: 450px; margin: 40px auto;">
+        <h2>🔒 Acesso ao Sistema</h2>
+        <p style="margin-bottom: 20px; color: var(--ml-muted); font-size: 14px;">Entre com seus dados para gerenciar suas vendas e estoque.</p>
         <form id="auth-form" onsubmit="handleAuth(event)">
-            <input type="text" id="nome" placeholder="Seu Nome Completo" required>
-            <input type="email" id="email" placeholder="Seu E-mail" required>
-            <input type="password" id="password" placeholder="Sua Senha" required>
+            <label>Nome Completo:</label>
+            <input type="text" id="nome" placeholder="Ex: Rodrigo Feitosa" required>
+            
+            <label>E-mail:</label>
+            <input type="email" id="email" placeholder="seu@email.com" required>
+            
+            <label>Senha:</label>
+            <input type="password" id="password" placeholder="••••••••" required>
             
             <div class="remember-group">
                 <input type="checkbox" id="remember-me" checked>
-                <label for="remember-me">Lembrar meu usuário (permanecer conectado neste aparelho)</label>
+                <label for="remember-me">Permanecer conectado neste aparelho</label>
             </div>
 
-            <button type="submit" id="auth-btn">Entrar / Cadastrar</button>
+            <button type="submit" id="auth-btn" style="margin-top: 10px; padding: 14px;">Entrar / Cadastrar</button>
         </form>
     </div>
 
-    <!-- PAINEL PRINCIPAL (SÓ APARECE APÓS LOGIN) -->
+    <!-- PAINEL PRINCIPAL (APÓS LOGIN) -->
     <div id="app-screen" class="hidden">
-        
-        <!-- CABEÇALHO COM NOME DO USUÁRIO -->
-        <div class="card flex" style="justify-content: space-between; align-items: center;">
-            <div>
-                <h2 id="user-display" style="margin: 0;">Nome do Usuário</h2>
-                <small id="user-email" style="color: #64748b;"></small>
-            </div>
-            <button onclick="logout()" class="danger" style="width: auto; padding: 8px 16px;">Sair</button>
-        </div>
 
         <!-- NAVEGAÇÃO -->
         <nav>
             <button class="nav-btn active" onclick="switchTab('caixa')">🛒 Nova Venda</button>
             <button class="nav-btn" onclick="switchTab('fiado')">📖 Caderno de Fiado</button>
-            <button class="nav-btn" onclick="switchTab('estoque')">📦 Estoque</button>
-            <button class="nav-btn" onclick="switchTab('relatorio')">📊 Balanço</button>
+            <button class="nav-btn" onclick="switchTab('estoque')">📦 Estoque & Patrimônio</button>
+            <button class="nav-btn" onclick="switchTab('relatorio')">📊 Balanço & Relatórios</button>
         </nav>
 
         <!-- ABA 1: NOVA VENDA (CAIXA) -->
         <div id="tab-caixa" class="tab-content">
             <div class="card">
-                <h3>Registrar Venda</h3>
+                <h3>🛍️ Registrar Nova Venda</h3>
+                
+                <label>🔍 Pesquisar produto no catálogo:</label>
+                <input type="text" id="busca-produto-venda" class="search-input" placeholder="Digite para filtrar..." oninput="renderProdutosVenda()">
+
                 <label>Selecione o Produto:</label>
                 <select id="venda-produto" onchange="atualizarPrecoVenda()"></select>
                 
-                <div class="flex">
-                    <div class="flex-1">
+                <div class="grid-2">
+                    <div>
                         <label>Quantidade:</label>
                         <input type="number" id="venda-qtd" value="1" min="1" oninput="atualizarPrecoVenda()">
                     </div>
-                    <div class="flex-1">
-                        <label>Total (R$):</label>
-                        <input type="number" id="venda-total" readonly style="font-weight: bold; color: var(--secondary);">
+                    <div>
+                        <label>Valor Total (R$):</label>
+                        <input type="number" id="venda-total" readonly style="font-weight: 800; color: var(--ml-green); background-color: #f9f9f9;">
                     </div>
                 </div>
 
@@ -138,168 +269,227 @@
 
                 <div id="group-cliente" class="hidden">
                     <label>Nome do Cliente (Fiado):</label>
-                    <input type="text" id="venda-cliente" placeholder="Ex: Seu Raimundo da esquina">
+                    <input type="text" id="venda-cliente" placeholder="Ex: Sr. Raimundo">
                 </div>
 
-                <button onclick="finalizarVenda()" class="success">Finalizar Venda</button>
+                <button onclick="finalizarVenda()" class="success" style="padding: 14px; margin-top: 10px;">Finalizar Venda</button>
             </div>
         </div>
 
         <!-- ABA 2: FIADO -->
         <div id="tab-fiado" class="tab-content hidden">
             <div class="card">
-                <h3>Controle de Fiado</h3>
+                <h3>📖 Controle do Caderno de Fiado</h3>
                 
-                <!-- BUSCA DE CLIENTES FIADO -->
-                <input type="text" id="busca-fiado" class="search-input" placeholder="🔍 Buscar cliente no fiado..." oninput="renderAll()">
+                <input type="text" id="busca-fiado" class="search-input" placeholder="Buscar cliente por nome..." oninput="renderAll()">
 
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Cliente</th>
-                            <th>Valor Devido</th>
-                            <th>Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody id="lista-fiado"></tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Valor Devido</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-fiado"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <!-- ABA 3: ESTOQUE -->
         <div id="tab-estoque" class="tab-content hidden">
+            <!-- PAINEL FINANCEIRO DO ESTOQUE -->
             <div class="card">
-                <h3 id="titulo-form-produto">Cadastrar / Modificar Produto</h3>
-                <input type="text" id="prod-nome" placeholder="Nome do Produto (Ex: Arroz 1kg)">
-                <div class="flex">
-                    <input type="number" id="prod-custo" placeholder="Preço de Custo (R$)" step="0.01">
-                    <input type="number" id="prod-venda" placeholder="Preço de Venda (R$)" step="0.01">
-                    <input type="number" id="prod-qtd" placeholder="Quantidade em Estoque">
-                </div>
-
-                <label style="font-size: 14px; font-weight: bold; margin-bottom: 5px; display: block;">Foto do Produto (Câmera ou Galeria):</label>
-                <input type="file" id="prod-foto" accept="image/*" onchange="processarFoto(event)">
-                
-                <div style="text-align: center; margin-bottom: 10px;">
-                    <img id="preview-foto" src="" class="img-preview hidden" alt="Prévia da foto">
-                </div>
-
-                <div class="flex">
-                    <button onclick="salvarProduto()" id="btn-salvar-produto" class="flex-1">Salvar Produto</button>
-                    <button onclick="cancelarEdicaoProduto()" id="btn-cancelar-edicao" class="danger flex-1 hidden">Cancelar Edição</button>
+                <h3>💵 Valor e Balanço Patrimonial do Estoque</h3>
+                <div class="grid-3" style="margin-top: 10px;">
+                    <div class="stat-box">
+                        <div class="stat-title">Custo Investido</div>
+                        <div class="stat-value" id="stat-estoque-custo" style="color: var(--ml-red);">R$ 0,00</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-title">Potencial de Venda</div>
+                        <div class="stat-value" id="stat-estoque-venda" style="color: var(--ml-blue);">R$ 0,00</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-title">Lucro Projetado</div>
+                        <div class="stat-value" id="stat-estoque-lucro" style="color: var(--ml-green);">R$ 0,00</div>
+                    </div>
                 </div>
             </div>
 
             <div class="card">
-                <h3>Produtos Cadastrados</h3>
+                <h3 id="titulo-form-produto">📦 Cadastrar / Modificar Produto</h3>
                 
-                <!-- BUSCA DE PRODUTOS NO ESTOQUE -->
-                <input type="text" id="busca-produto" class="search-input" placeholder="🔍 Buscar produto no estoque..." oninput="renderAll()">
+                <label>Nome do Produto:</label>
+                <input type="text" id="prod-nome" placeholder="Ex: Arroz Tio João 1kg">
+                
+                <div class="grid-2">
+                    <div>
+                        <label>Preço Custo (R$):</label>
+                        <input type="number" id="prod-custo" placeholder="0.00" step="0.01">
+                    </div>
+                    <div>
+                        <label>Preço Venda (R$):</label>
+                        <input type="number" id="prod-venda" placeholder="0.00" step="0.01">
+                    </div>
+                    <div>
+                        <label>Quantidade Atual:</label>
+                        <input type="number" id="prod-qtd" placeholder="0">
+                    </div>
+                    <div>
+                        <label>Qtd Mínima (Alerta):</label>
+                        <input type="number" id="prod-min" placeholder="5" value="5">
+                    </div>
+                </div>
 
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Foto</th>
-                            <th>Produto</th>
-                            <th>Custo</th>
-                            <th>Venda</th>
-                            <th>Qtd</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="lista-produtos"></tbody>
-                </table>
+                <label>Foto do Produto:</label>
+                <input type="file" id="prod-foto" accept="image/*" onchange="processarFoto(event)">
+                
+                <div style="text-align: center; margin-bottom: 12px;">
+                    <img id="preview-foto" src="" class="img-preview hidden" alt="Prévia da foto">
+                </div>
+
+                <div class="flex">
+                    <button onclick="salvarProduto()" id="btn-salvar-produto" class="flex-1" style="padding: 12px;">Salvar Produto</button>
+                    <button onclick="cancelarEdicaoProduto()" id="btn-cancelar-edicao" class="danger flex-1 hidden" style="padding: 12px;">Cancelar Edição</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📋 Produtos Cadastrados e Níveis de Estoque</h3>
+                
+                <input type="text" id="busca-produto" class="search-input" placeholder="Buscar produto..." oninput="renderAll()">
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Foto</th>
+                                <th>Produto</th>
+                                <th>Custo</th>
+                                <th>Venda</th>
+                                <th>Qtd Atual</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-produtos"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <!-- ABA 4: RELATÓRIO E BALANÇO -->
         <div id="tab-relatorio" class="tab-content hidden">
             <div class="card">
-                <h3>📊 Balanço Financeiro e Filtros</h3>
+                <h3>📊 Balanço Financeiro</h3>
                 
-                <!-- FILTRO DE PERÍODO -->
                 <div class="filter-group">
-                    <label style="font-size: 14px; font-weight: bold;">Selecione o Período:</label>
+                    <label>Selecione o Período:</label>
                     <select id="filtro-periodo" onchange="toggleFiltroDatas()">
                         <option value="todos">Todo o Histórico</option>
                         <option value="hoje">Hoje</option>
                         <option value="7dias">Últimos 7 dias</option>
                         <option value="mes">Este Mês</option>
-                        <option value="custom">Personalizado (Data Inicial e Final)</option>
+                        <option value="custom">Personalizado (Período Específico)</option>
                     </select>
 
-                    <div id="grupo-datas-custom" class="flex hidden" style="margin-top: 10px;">
-                        <div class="flex-1">
-                            <label style="font-size: 12px;">Data Inicial:</label>
+                    <div id="grupo-datas-custom" class="grid-2 hidden" style="margin-top: 10px;">
+                        <div>
+                            <label>Data Inicial:</label>
                             <input type="date" id="data-inicio" onchange="renderAll()">
                         </div>
-                        <div class="flex-1">
-                            <label style="font-size: 12px;">Data Final:</label>
+                        <div>
+                            <label>Data Final:</label>
                             <input type="date" id="data-fim" onchange="renderAll()">
                         </div>
                     </div>
                 </div>
 
                 <!-- RESUMO GERAL DO PERÍODO -->
-                <div class="flex" style="margin-bottom: 15px;">
-                    <div class="flex-1 stat-box">
-                        <div class="stat-title">Vendas Totais (Produtos)</div>
-                        <div class="stat-value" id="stat-vendas">R$ 0,00</div>
+                <div class="grid-3" style="margin-bottom: 16px;">
+                    <div class="stat-box">
+                        <div class="stat-title">Vendas Totais</div>
+                        <div class="stat-value" id="stat-vendas" style="color: var(--ml-blue);">R$ 0,00</div>
                     </div>
-                    <div class="flex-1 stat-box">
-                        <div class="stat-title">Lucro Estimado</div>
-                        <div class="stat-value" id="stat-lucro" style="color: var(--secondary);">R$ 0,00</div>
+                    <div class="stat-box">
+                        <div class="stat-title">Lucro Realizado</div>
+                        <div class="stat-value" id="stat-lucro" style="color: var(--ml-green);">R$ 0,00</div>
                     </div>
-                    <div class="flex-1 stat-box">
-                        <div class="stat-title">Fiado Pendente Geral</div>
-                        <div class="stat-value" id="stat-fiado-pendente" style="color: var(--danger);">R$ 0,00</div>
+                    <div class="stat-box">
+                        <div class="stat-title">Patrimônio em Estoque</div>
+                        <div class="stat-value" id="stat-estoque-resumo">R$ 0,00</div>
                     </div>
                 </div>
 
-                <h4 style="margin-bottom: 10px; color: #475569;">Entradas Efetivas no Caixa (Período Selecionado):</h4>
+                <label style="margin-bottom: 8px;">Entradas Efetivas no Caixa (Detalhadas):</label>
                 
-                <!-- DETALHAMENTO POR ENTRADAS DE CAIXA -->
-                <div class="flex">
-                    <div class="flex-1 stat-box">
-                        <div class="stat-title">💵 Dinheiro Entrada</div>
+                <div class="grid-5">
+                    <div class="stat-box">
+                        <div class="stat-title">💵 Dinheiro</div>
                         <div class="stat-value" id="stat-dinheiro">R$ 0,00</div>
                     </div>
-                    <div class="flex-1 stat-box">
-                        <div class="stat-title">⚡ PIX Entrada</div>
+                    <div class="stat-box">
+                        <div class="stat-title">⚡ PIX</div>
                         <div class="stat-value" id="stat-pix">R$ 0,00</div>
                     </div>
-                    <div class="flex-1 stat-box">
+                    <div class="stat-box">
                         <div class="stat-title">💳 Crédito</div>
                         <div class="stat-value" id="stat-credito">R$ 0,00</div>
                     </div>
-                    <div class="flex-1 stat-box">
+                    <div class="stat-box">
                         <div class="stat-title">💳 Débito</div>
                         <div class="stat-value" id="stat-debito">R$ 0,00</div>
                     </div>
-                    <div class="flex-1 stat-box">
-                        <div class="stat-title">📖 Fiado Gerado</div>
-                        <div class="stat-value" id="stat-fiado-gerado" style="color: var(--danger);">R$ 0,00</div>
+                    <div class="stat-box">
+                        <div class="stat-title">📖 Fiado</div>
+                        <div class="stat-value" id="stat-fiado-gerado" style="color: var(--ml-red);">R$ 0,00</div>
                     </div>
                 </div>
             </div>
 
+            <!-- RANKING DE MAIS VENDIDOS -->
             <div class="card">
-                <h3>Histórico de Transações</h3>
+                <h3>🏆 Ranking de Mais Vendidos & Sugestão de Recompra</h3>
+                <p style="font-size: 13px; color: var(--ml-muted); margin-bottom: 12px;">Ranking ordenado pelo volume total de vendas. Alertas automáticos indicam quando reabastecer.</p>
                 
-                <!-- BUSCA NO HISTÓRICO DE TRANSAÇÕES -->
-                <input type="text" id="busca-historico" class="search-input" placeholder="🔍 Buscar por produto, cliente ou tipo no histórico..." oninput="renderAll()">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th># Pos.</th>
+                                <th>Produto</th>
+                                <th>Total Vendido</th>
+                                <th>Estoque Atual</th>
+                                <th>Estoque Mínimo</th>
+                                <th>Sugestão de Compra</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-mais-vendidos"></tbody>
+                    </table>
+                </div>
+            </div>
 
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>Tipo / Pagamento</th>
-                            <th>Detalhes</th>
-                            <th>Valor</th>
-                        </tr>
-                    </thead>
-                    <tbody id="lista-historico"></tbody>
-                </table>
+            <div class="card">
+                <h3>📜 Histórico de Transações</h3>
+                
+                <input type="text" id="busca-historico" class="search-input" placeholder="Buscar no histórico..." oninput="renderAll()">
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Tipo</th>
+                                <th>Detalhes</th>
+                                <th>Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-historico"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -311,7 +501,7 @@
     // ESTADO DA APLICAÇÃO
     let currentUser = null;
     let tempFotoBase64 = '';
-    let editIndex = -1; // -1 indica novo produto; >=0 indica edição de produto existente
+    let editIndex = -1;
     
     let db = {
         users: JSON.parse(localStorage.getItem('tsg_users')) || [],
@@ -320,7 +510,6 @@
         fiados: JSON.parse(localStorage.getItem('tsg_fiados')) || {}
     };
 
-    // SALVAMENTO COM TRATAMENTO DE MEMÓRIA DE SEGURANÇA
     function saveData() {
         try {
             localStorage.setItem('tsg_users', JSON.stringify(db.users));
@@ -328,12 +517,12 @@
             localStorage.setItem('tsg_vendas', JSON.stringify(db.vendas));
             localStorage.setItem('tsg_fiados', JSON.stringify(db.fiados));
         } catch (e) {
-            alert("Atenção: O limite de armazenamento do navegador foi atingido. Remova produtos antigos ou imagens pesadas.");
-            console.error("Erro ao salvar dados no LocalStorage:", e);
+            alert("Atenção: Limite de armazenamento atingido. Considere remover imagens antigas.");
+            console.error(e);
         }
     }
 
-    // AUTO-LOGIN (SESSÃO SALVA)
+    // AUTO-LOGIN
     window.addEventListener('DOMContentLoaded', () => {
         const savedEmail = localStorage.getItem('tsg_session');
         if (savedEmail) {
@@ -358,7 +547,7 @@
             user = { nome, email, pass };
             db.users.push(user);
             saveData();
-            alert(`Bem-vindo(a), ${nome}! Sua conta foi cadastrada com sucesso.`);
+            alert(`Bem-vindo(a), ${nome}! Conta criada com sucesso.`);
         } else {
             if(user.pass !== pass) {
                 alert("Senha incorreta!");
@@ -383,9 +572,9 @@
         currentUser = user;
         document.getElementById('auth-screen').classList.add('hidden');
         document.getElementById('app-screen').classList.remove('hidden');
+        document.getElementById('user-header-info').classList.remove('hidden');
         
         document.getElementById('user-display').innerText = currentUser.nome || "Usuário";
-        document.getElementById('user-email').innerText = currentUser.email;
         
         renderAll();
     }
@@ -395,9 +584,10 @@
         localStorage.removeItem('tsg_session');
         document.getElementById('auth-screen').classList.remove('hidden');
         document.getElementById('app-screen').classList.add('hidden');
+        document.getElementById('user-header-info').classList.add('hidden');
     }
 
-    // COMPRESSÃO E OTIMIZAÇÃO DE FOTO
+    // COMPRESSÃO DE FOTO
     function processarFoto(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -439,7 +629,7 @@
         reader.readAsDataURL(file);
     }
 
-    // NAVEGAÇÃO
+    // NAVEGAÇÃO ENTRE ABAS
     function switchTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
@@ -448,12 +638,14 @@
         event.target.classList.add('active');
     }
 
-    // CADASTRO / EDIÇÃO DE ESTOQUE
+    // GESTÃO DE PRODUTOS
     function salvarProduto() {
         const nome = document.getElementById('prod-nome').value.trim();
         const custo = parseFloat(document.getElementById('prod-custo').value);
         const venda = parseFloat(document.getElementById('prod-venda').value);
         const qtd = parseInt(document.getElementById('prod-qtd').value);
+        const qtdMinInput = document.getElementById('prod-min').value;
+        const qtdMin = (qtdMinInput !== '' && !isNaN(parseInt(qtdMinInput))) ? parseInt(qtdMinInput) : 5;
 
         if(!nome || isNaN(custo) || isNaN(venda) || isNaN(qtd)) {
             alert("Preencha todos os campos do produto!");
@@ -463,18 +655,17 @@
         const placeholderFoto = "https://via.placeholder.com/80?text=Sem+Foto";
 
         if (editIndex >= 0) {
-            // MODO EDIÇÃO
             const fotoExistente = db.produtos[editIndex].foto;
             db.produtos[editIndex] = {
                 nome,
                 custo,
                 venda,
                 qtd,
+                qtdMin,
                 foto: tempFotoBase64 || fotoExistente || placeholderFoto
             };
             alert("Produto atualizado com sucesso!");
         } else {
-            // MODO CADASTRO NOVO
             const fotoFinal = tempFotoBase64 || placeholderFoto;
             const indexExistente = db.produtos.findIndex(p => p.nome.toLowerCase() === nome.toLowerCase());
             
@@ -484,10 +675,11 @@
                     custo, 
                     venda, 
                     qtd, 
+                    qtdMin,
                     foto: tempFotoBase64 || db.produtos[indexExistente].foto || placeholderFoto 
                 };
             } else {
-                db.produtos.push({ nome, custo, venda, qtd, foto: fotoFinal });
+                db.produtos.push({ nome, custo, venda, qtd, qtdMin, foto: fotoFinal });
             }
             alert("Produto cadastrado com sucesso!");
         }
@@ -506,8 +698,8 @@
         document.getElementById('prod-custo').value = prod.custo;
         document.getElementById('prod-venda').value = prod.venda;
         document.getElementById('prod-qtd').value = prod.qtd;
+        document.getElementById('prod-min').value = prod.qtdMin !== undefined ? prod.qtdMin : 5;
 
-        // Prévia da Foto
         if (prod.foto) {
             const preview = document.getElementById('preview-foto');
             preview.src = prod.foto;
@@ -520,7 +712,6 @@
         document.getElementById('btn-salvar-produto').classList.add('warning');
         document.getElementById('btn-cancelar-edicao').classList.remove('hidden');
 
-        // Rolar até o formulário
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -530,25 +721,44 @@
         document.getElementById('prod-custo').value = '';
         document.getElementById('prod-venda').value = '';
         document.getElementById('prod-qtd').value = '';
+        document.getElementById('prod-min').value = '5';
         document.getElementById('prod-foto').value = '';
         document.getElementById('preview-foto').classList.add('hidden');
         tempFotoBase64 = '';
 
-        document.getElementById('titulo-form-produto').innerText = "Cadastrar / Modificar Produto";
+        document.getElementById('titulo-form-produto').innerText = "📦 Cadastrar / Modificar Produto";
         document.getElementById('btn-salvar-produto').innerText = "Salvar Produto";
         document.getElementById('btn-salvar-produto').classList.remove('warning');
         document.getElementById('btn-cancelar-edicao').classList.add('hidden');
     }
 
     function deletarProduto(index) {
-        if(confirm("Tem certeza que deseja excluir este produto do estoque?")) {
+        if(confirm("Tem certeza que deseja excluir este produto?")) {
             db.produtos.splice(index, 1);
             saveData();
             renderAll();
         }
     }
 
-    // CAIXA / VENDAS
+    // CAIXA E VENDAS
+    function renderProdutosVenda() {
+        const busca = (document.getElementById('busca-produto-venda')?.value || '').toLowerCase();
+        const selectProd = document.getElementById('venda-produto');
+        if (!selectProd) return;
+
+        const produtosFiltrados = db.produtos.filter(p => p.nome.toLowerCase().includes(busca));
+
+        if (produtosFiltrados.length === 0) {
+            selectProd.innerHTML = `<option value="">Nenhum produto encontrado</option>`;
+        } else {
+            selectProd.innerHTML = produtosFiltrados.map(p => 
+                `<option value="${p.nome}">${p.nome} (Estoque: ${p.qtd}) - R$ ${p.venda.toFixed(2)}</option>`
+            ).join('');
+        }
+
+        atualizarPrecoVenda();
+    }
+
     function atualizarPrecoVenda() {
         const prodNome = document.getElementById('venda-produto').value;
         const qtd = parseInt(document.getElementById('venda-qtd').value) || 1;
@@ -556,6 +766,8 @@
 
         if(prod) {
             document.getElementById('venda-total').value = (prod.venda * qtd).toFixed(2);
+        } else {
+            document.getElementById('venda-total').value = '0.00';
         }
     }
 
@@ -574,22 +786,20 @@
 
         const prod = db.produtos.find(p => p.nome === prodNome);
         if(!prod || prod.qtd < qtd) {
-            alert("Estoque insuficiente ou produto não selecionado!");
+            alert("Estoque insuficiente ou produto inválido!");
             return;
         }
 
         if(tipo === 'Fiado' && !cliente) {
-            alert("Informe o nome do cliente para a venda fiada!");
+            alert("Informe o nome do cliente fiado!");
             return;
         }
 
-        // Abater Estoque
         prod.qtd -= qtd;
 
         const total = prod.venda * qtd;
         const lucro = (prod.venda - prod.custo) * qtd;
 
-        // Registrar Venda
         const venda = {
             timestamp: new Date().getTime(),
             data: new Date().toLocaleString('pt-BR'),
@@ -603,17 +813,18 @@
 
         db.vendas.push(venda);
 
-        // Se for fiado, adicionar à dívida do cliente
         if(tipo === 'Fiado') {
             db.fiados[cliente] = (db.fiados[cliente] || 0) + total;
         }
+
+        document.getElementById('busca-produto-venda').value = '';
 
         saveData();
         renderAll();
         alert("Venda realizada com sucesso!");
     }
 
-    // GESTÃO DE FIADO
+    // FIADO
     function pagarFiado(cliente) {
         const valorDevido = db.fiados[cliente] || 0;
         const valorPagar = parseFloat(prompt(`Quanto ${cliente} está pagando?\nDevido Atual: R$ ${valorDevido.toFixed(2)}`));
@@ -633,11 +844,9 @@
             else if (opcaoForma === "3") formaRecebimento = "Cartão de Débito";
             else if (opcaoForma === "4") formaRecebimento = "Cartão de Crédito";
 
-            // Abater a dívida do cliente
             db.fiados[cliente] -= valorPagar;
             if(db.fiados[cliente] <= 0.001) delete db.fiados[cliente];
 
-            // Registrar entrada no histórico
             db.vendas.push({
                 timestamp: new Date().getTime(),
                 data: new Date().toLocaleString('pt-BR'),
@@ -652,11 +861,11 @@
 
             saveData();
             renderAll();
-            alert(`Pagamento de R$ ${valorPagar.toFixed(2)} (${formaRecebimento}) recebido de ${cliente} com sucesso!`);
+            alert(`Pagamento de R$ ${valorPagar.toFixed(2)} (${formaRecebimento}) recebido com sucesso!`);
         }
     }
 
-    // FILTRO DE DATAS E BUSCAS DO RELATÓRIO
+    // FILTROS
     function toggleFiltroDatas() {
         const op = document.getElementById('filtro-periodo').value;
         const customGroup = document.getElementById('grupo-datas-custom');
@@ -693,56 +902,120 @@
         });
     }
 
-    // RENDERIZAÇÃO GERAL DA INTERFACE
+    // RENDERIZAÇÃO COMPLETA DA INTERFACE
     function renderAll() {
-        // 1. Renderizar Combo do Caixa
-        const selectProd = document.getElementById('venda-produto');
-        selectProd.innerHTML = db.produtos.map(p => `<option value="${p.nome}">${p.nome} (Estoque: ${p.qtd}) - R$ ${p.venda.toFixed(2)}</option>`).join('');
-        atualizarPrecoVenda();
+        renderProdutosVenda();
 
-        // 2. Renderizar Tabela de Produtos (Com Busca e Botão de Editar)
+        // 1. Cálculos de Estoque
+        let totalCustoEstoque = 0;
+        let totalVendaEstoque = 0;
+
+        db.produtos.forEach(p => {
+            totalCustoEstoque += (p.custo * p.qtd);
+            totalVendaEstoque += (p.venda * p.qtd);
+        });
+
+        const lucroProjetadoEstoque = totalVendaEstoque - totalCustoEstoque;
+
+        document.getElementById('stat-estoque-custo').innerText = `R$ ${totalCustoEstoque.toFixed(2)}`;
+        document.getElementById('stat-estoque-venda').innerText = `R$ ${totalVendaEstoque.toFixed(2)}`;
+        document.getElementById('stat-estoque-lucro').innerText = `R$ ${lucroProjetadoEstoque.toFixed(2)}`;
+        document.getElementById('stat-estoque-resumo').innerText = `R$ ${totalCustoEstoque.toFixed(2)}`;
+
+        // 2. Lista de Produtos
         const buscaProdTermo = (document.getElementById('busca-produto')?.value || '').toLowerCase();
         const produtosFiltrados = db.produtos.filter(p => p.nome.toLowerCase().includes(buscaProdTermo));
 
         document.getElementById('lista-produtos').innerHTML = produtosFiltrados.map((p) => {
             const originalIndex = db.produtos.indexOf(p);
+            const qtdMin = p.qtdMin !== undefined ? p.qtdMin : 5;
+            const estaBaixo = p.qtd <= qtdMin;
+
             return `
                 <tr>
                     <td><img src="${p.foto}" class="img-thumb" alt="${p.nome}"></td>
                     <td><b>${p.nome}</b></td>
                     <td>R$ ${p.custo.toFixed(2)}</td>
                     <td>R$ ${p.venda.toFixed(2)}</td>
-                    <td>${p.qtd}</td>
+                    <td><b>${p.qtd}</b> <small style="color: var(--ml-muted);">(Mín: ${qtdMin})</small></td>
+                    <td>
+                        <span class="badge ${estaBaixo ? 'badge-repor' : 'badge-ok'}">
+                            ${estaBaixo ? '⚠️ Repor Estoque' : '✅ Ok'}
+                        </span>
+                    </td>
                     <td>
                         <div class="btn-group-actions">
-                            <button onclick="editarProduto(${originalIndex})" class="warning" style="padding: 4px 8px; width: auto;">Editar</button>
-                            <button onclick="deletarProduto(${originalIndex})" class="danger" style="padding: 4px 8px; width: auto;">Excluir</button>
+                            <button onclick="editarProduto(${originalIndex})" class="warning" style="padding: 5px 10px; width: auto; font-size: 12px;">Editar</button>
+                            <button onclick="deletarProduto(${originalIndex})" class="danger" style="padding: 5px 10px; width: auto; font-size: 12px;">Excluir</button>
                         </div>
                     </td>
                 </tr>
             `;
         }).join('');
 
-        // 3. Renderizar Caderno de Fiado (Com Busca)
+        // 3. Fiados
         const buscaFiadoTermo = (document.getElementById('busca-fiado')?.value || '').toLowerCase();
         const listaFiado = document.getElementById('lista-fiado');
         listaFiado.innerHTML = '';
-        let totalFiadoPendente = 0;
 
         for(let cliente in db.fiados) {
-            totalFiadoPendente += db.fiados[cliente];
             if (cliente.toLowerCase().includes(buscaFiadoTermo)) {
                 listaFiado.innerHTML += `
                     <tr>
                         <td><b>${cliente}</b></td>
-                        <td style="color: var(--danger); font-weight: bold;">R$ ${db.fiados[cliente].toFixed(2)}</td>
-                        <td><button onclick="pagarFiado('${cliente}')" class="success" style="padding: 4px 8px; width: auto;">Abater / Pagar</button></td>
+                        <td style="color: var(--ml-red); font-weight: bold;">R$ ${db.fiados[cliente].toFixed(2)}</td>
+                        <td><button onclick="pagarFiado('${cliente}')" class="success" style="padding: 6px 12px; width: auto; font-size: 13px;">Abater / Pagar</button></td>
                     </tr>
                 `;
             }
         }
 
-        // 4. Renderizar Relatório Filtrado por Data e Busca de Texto
+        // 4. Ranking Mais Vendidos
+        const mapaVendas = {};
+        db.vendas.forEach(v => {
+            if (v.tipo !== 'Pagamento Fiado' && v.produto !== 'Recebimento de Fiado') {
+                mapaVendas[v.produto] = (mapaVendas[v.produto] || 0) + v.qtd;
+            }
+        });
+
+        const rankingProdutos = db.produtos.map(p => {
+            const totalVendido = mapaVendas[p.nome] || 0;
+            const min = p.qtdMin !== undefined ? p.qtdMin : 5;
+            return {
+                nome: p.nome,
+                totalVendido,
+                qtdAtual: p.qtd,
+                qtdMin: min
+            };
+        }).sort((a, b) => b.totalVendido - a.totalVendido);
+
+        const listaMaisVendidosEl = document.getElementById('lista-mais-vendidos');
+        if (rankingProdutos.length === 0) {
+            listaMaisVendidosEl.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--ml-muted);">Nenhum produto cadastrado.</td></tr>`;
+        } else {
+            listaMaisVendidosEl.innerHTML = rankingProdutos.map((item, idx) => {
+                const precisaComprar = item.qtdAtual <= item.qtdMin;
+                const sugComprarQtd = precisaComprar ? Math.max((item.qtdMin * 2) - item.qtdAtual, item.qtdMin) : 0;
+
+                return `
+                    <tr>
+                        <td><b>#${idx + 1}</b></td>
+                        <td><b>${item.nome}</b></td>
+                        <td><span style="color: var(--ml-blue); font-weight: bold;">${item.totalVendido} un.</span></td>
+                        <td>${item.qtdAtual}</td>
+                        <td>${item.qtdMin}</td>
+                        <td>
+                            ${precisaComprar 
+                                ? `<span class="badge badge-repor">⚠️ Comprar min. +${sugComprarQtd} un.</span>` 
+                                : `<span class="badge badge-ok">Estoque Suficiente</span>`
+                            }
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // 5. Histórico e Métricas Financeiras
         let vendasFiltradas = filtrarVendasPorPeriodo(db.vendas);
         const buscaHistTermo = (document.getElementById('busca-historico')?.value || '').toLowerCase();
 
@@ -800,20 +1073,16 @@
 
             return `
                 <tr>
-                    <td><small>${v.data}</small></td>
+                    <td><small style="color: var(--ml-muted);">${v.data}</small></td>
                     <td><span class="badge ${badgeClass}">${tagTexto}</span></td>
-                    <td>${v.produto} (${v.qtd}x) ${v.cliente !== '-' ? '-> ' + v.cliente : ''}</td>
+                    <td>${v.produto} (${v.qtd}x) ${v.cliente !== '-' ? '➔ ' + v.cliente : ''}</td>
                     <td><b>R$ ${v.total.toFixed(2)}</b></td>
                 </tr>
             `;
         }).join('');
 
-        // Indicadores Globais
         document.getElementById('stat-vendas').innerText = `R$ ${totalVendas.toFixed(2)}`;
         document.getElementById('stat-lucro').innerText = `R$ ${totalLucro.toFixed(2)}`;
-        document.getElementById('stat-fiado-pendente').innerText = `R$ ${totalFiadoPendente.toFixed(2)}`;
-
-        // Detalhamento de Entradas em Caixa
         document.getElementById('stat-dinheiro').innerText = `R$ ${totalDinheiro.toFixed(2)}`;
         document.getElementById('stat-pix').innerText = `R$ ${totalPix.toFixed(2)}`;
         document.getElementById('stat-credito').innerText = `R$ ${totalCredito.toFixed(2)}`;

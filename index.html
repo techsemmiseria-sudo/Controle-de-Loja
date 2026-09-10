@@ -183,6 +183,30 @@
         .remember-group input { width: auto; margin-bottom: 0; cursor: pointer; }
         .remember-group label { font-size: 13px; color: var(--ml-muted); cursor: pointer; margin-bottom: 0; }
         .btn-group-actions { display: flex; gap: 6px; }
+
+        /* ESTILO DO BOTÃO DE APOIO */
+        .btn-apoio {
+            background-color: #00a650;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 700;
+            padding: 14px 28px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 166, 80, 0.3);
+            transition: transform 0.2s, background-color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 0;
+            text-decoration: none;
+        }
+        .btn-apoio:hover {
+            background-color: #008741;
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
@@ -208,7 +232,7 @@
         <p style="margin-bottom: 20px; color: var(--ml-muted); font-size: 14px;">Entre com seus dados para gerenciar suas vendas e estoque.</p>
         <form id="auth-form" onsubmit="handleAuth(event)">
             <label>Nome Completo:</label>
-            <input type="text" id="nome" placeholder="Ex: Rodrigo Feitosa" required>
+            <input type="text" id="nome" placeholder="Ex: Seu Nome" required>
             
             <label>E-mail:</label>
             <input type="email" id="email" placeholder="seu@email.com" required>
@@ -491,6 +515,29 @@
                     </table>
                 </div>
             </div>
+        </div>
+
+        <!-- CARD DE APOIO AO PROJETO (NOVO) -->
+        <div class="card" style="background: linear-gradient(135deg, #ffffff 0%, #f4f8ff 100%); border: 2px solid var(--ml-blue); text-align: center; padding: 28px 20px; border-radius: 12px; margin-top: 25px; box-shadow: 0 4px 15px rgba(52, 131, 250, 0.08);">
+            <div style="font-size: 36px; margin-bottom: 8px;">🚀💙</div>
+            
+            <h3 style="justify-content: center; color: #2d3277; font-size: 20px; font-weight: 800; margin-bottom: 10px;">
+                Apoie e Fortaleça o Projeto TSG!
+            </h3>
+            
+            <p style="color: #555555; font-size: 14px; line-height: 1.6; max-width: 580px; margin: 0 auto 18px auto;">
+                Este sistema foi construído com dedicação para simplificar a gestão do seu negócio no dia a dia. Se ele está sendo útil para você e você gostaria de contribuir para a manutenção, atualizações e criação de novas ferramentas, faça uma colaboração!
+            </p>
+
+            <a href="https://mpago.la/1bFBQQa" target="_blank" rel="noopener noreferrer" style="text-decoration: none; display: inline-block;">
+                <button type="button" class="btn-apoio">
+                    <span>🤝</span> Contribuir via Mercado Pago
+                </button>
+            </a>
+
+            <p style="color: #888888; font-size: 12px; margin-top: 12px;">
+                Sua ajuda é essencial para manter o sistema sempre atualizado e acessível. Muito obrigado!
+            </p>
         </div>
 
     </div>

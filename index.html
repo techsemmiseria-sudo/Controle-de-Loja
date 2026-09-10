@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TSG - Controle de Caixa, Fiado e Estoque</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --secondary: #16a34a;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 15px; }
+
+        .container { max-width: 850px; margin: 0 auto; }
+        .card { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        
+        h1, h2, h3 { margin-bottom: 15px; color: var(--primary-dark); }
+        .flex { display: flex; gap: 10px; flex-wrap: wrap; }
+        .flex-1 { flex: 1; min-width: 180px; }
+
+        input, select, button { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; }
+        button { background-color: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background-color: var(--primary-dark); }
+        button.success { background-color: var(--secondary); }
+        button.danger { background-color: var(--danger); }
+
+        nav { display: flex; gap: 5px; margin-bottom: 20px; flex-wrap: wrap; }
+        nav button { padding: 10px; font-size: 14px; background: #e2e8f0; color: var(--text); flex: 1; min-width: 120px; }
+        nav button.active { background: var(--primary); color: white; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; vertical-align: middle; }
+        th { background-color: #f1f5f9; }
+
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
+        .badge-dinheiro { background: #dcfce7; color: #15803d; }
+        .badge-pix { background: #e0e7ff; color: #4338ca; }
+        .badge-credito { background: #fef3c7; color: #b45309; }
+        .badge-debito { background: #e0f2fe; color: #0369a1; }
+        .badge-fiado { background: #fef2f2; color: var(--danger); }
+        .badge-pagamento-fiado { background: #f0fdf4; color: var(--secondary); }
+        
+        .hidden { display: none; }
+        .stat-box { background: #f1f5f9; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0; }
+        .stat-title { font-size: 12px; font-weight: bold; color: #64748b; text-transform: uppercase; }
+        .stat-value { font-size: 18px; font-weight: bold; margin-top: 4px; }
+
+        .img-thumb { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1; }
+        .img-preview { max-height: 140px; border-radius: 8px; border: 1px solid #cbd5e1; margin-top: 5px; object-fit: cover; }
+        
+        .filter-group { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- TELA DE LOGIN / CADASTRO -->
+    <div id="auth-screen" class="card">
+        <h2>🔒 Acesso / Cadastro do Comerciante</h2>
+        <p style="margin-bottom: 15px; color: #64748b;">Informe seus dados para entrar ou criar sua conta.</p>
+        <form id="auth-form" onsubmit="handleAuth(event)">
+            <input type="text" id="nome" placeholder="Seu Nome Completo" required>
+            <input type="email" id="email" placeholder="Seu E-mail" required>
+            <input type="password" id="password" placeholder="Sua Senha" required>
+            <button type="submit" id="auth-btn">Entrar / Cadastrar</button>
+        </form>
+    </div>
+
+    <!-- PAINEL PRINCIPAL (SÓ APARECE APÓS LOGIN) -->
+    <div id="app-screen" class="hidden">
+        
+        <!-- CABEÇALHO COM NOME DO USUÁRIO -->
+        <div class="card flex" style="justify-content: space-between; align-items: center;">
+            <div>
+                <h2 id="user-display" style="margin: 0;">Nome do Usuário</h2>
+                <small id="user-email" style="color: #64748b;"></small>
+            </div>
+            <button onclick="logout()" class="danger" style="width: auto; padding: 8px 16px;">Sair</button>
+        </div>
+
+        <!-- NAVEGAÇÃO -->
+        <nav>
+            <button class="nav-btn active" onclick="switchTab('caixa')">🛒 Nova Venda</button>
+            <button class="nav-btn" onclick="switchTab('fiado')">📖 Caderno de Fiado</button>
+            <button class="nav-btn" onclick="switchTab('estoque')">📦 Estoque</button>
+            <button class="nav-btn" onclick="switchTab('relatorio')">📊 Balanço</button>
+        </nav>
+
+        <!-- ABA 1: NOVA VENDA (CAIXA) -->
+        <div id="tab-caixa" class="tab-content">
+            <div class="card">
+                <h3>Registrar Venda</h3>
+                <label>Selecione o Produto:</label>
+                <select id="venda-produto" onchange="atualizarPrecoVenda()"></select>
+                
+                <div class="flex">
+                    <div class="flex-1">
+                        <label>Quantidade:</label>
+                        <input type="number" id="venda-qtd" value="1" min="1" oninput="atualizarPrecoVenda()">
+                    </div>
+                    <div class="flex-1">
+                        <label>Total (R$):</label>
+                        <input type="number" id="venda-total" readonly style="font-weight: bold; color: var(--secondary);">
+                    </div>
+                </div>
+
+                <label>Forma de Pagamento:</label>
+                <select id="venda-tipo" onchange="toggleClienteFiado()">
+                    <option value="Dinheiro">💵 Dinheiro</option>
+                    <option value="PIX">⚡ PIX</option>
+                    <option value="Cartão de Crédito">💳 Cartão de Crédito</option>
+                    <option value="Cartão de Débito">💳 Cartão de Débito</option>
+                    <option value="Fiado">📖 Fiado (Marcar no Caderno)</option>
+                </select>
+
+                <div id="group-cliente" class="hidden">
+                    <label>Nome do Cliente (Fiado):</label>
+                    <input type="text" id="venda-cliente" placeholder="Ex: Seu Raimundo da esquina">
+                </div>
+
+                <button onclick="finalizarVenda()" class="success">Finalizar Venda</button>
+            </div>
+        </div>
+
+        <!-- ABA 2: FIADO -->
+        <div id="tab-fiado" class="tab-content hidden">
+            <div class="card">
+                <h3>Controle de Fiado</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Valor Devido</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-fiado"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ABA 3: ESTOQUE -->
+        <div id="tab-estoque" class="tab-content hidden">
+            <div class="card">
+                <h3>Cadastrar / Modificar Produto</h3>
+                <input type="text" id="prod-nome" placeholder="Nome do Produto (Ex: Arroz 1kg)">
+                <div class="flex">
+                    <input type="number" id="prod-custo" placeholder="Preço de Custo (R$)" step="0.01">
+                    <input type="number" id="prod-venda" placeholder="Preço de Venda (R$)" step="0.01">
+                    <input type="number" id="prod-qtd" placeholder="Quantidade em Estoque">
+                </div>
+
+                <label style="font-size: 14px; font-weight: bold; margin-bottom: 5px; display: block;">Foto do Produto (Câmera ou Galeria):</label>
+                <input type="file" id="prod-foto" accept="image/*" capture="environment" onchange="processarFoto(event)">
+                
+                <div style="text-align: center; margin-bottom: 10px;">
+                    <img id="preview-foto" src="" class="img-preview hidden" alt="Prévia da foto">
+                </div>
+
+                <button onclick="salvarProduto()">Salvar Produto</button>
+            </div>
+
+            <div class="card">
+                <h3>Produtos Cadastrados</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Foto</th>
+                            <th>Produto</th>
+                            <th>Custo</th>
+                            <th>Venda</th>
+                            <th>Qtd</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-produtos"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ABA 4: RELATÓRIO E TRANSFORMAÇÕES -->
+        <div id="tab-relatorio" class="tab-content hidden">
+            <div class="card">
+                <h3>📊 Balanço Financeiro e Filtro de Período</h3>
+                
+                <!-- FILTRO DE PERÍODO -->
+                <div class="filter-group">
+                    <label style="font-size: 14px; font-weight: bold;">Selecione o Período:</label>
+                    <select id="filtro-periodo" onchange="toggleFiltroDatas()">
+                        <option value="todos">Todo o Histórico</option>
+                        <option value="hoje">Hoje</option>
+                        <option value="7dias">Últimos 7 dias</option>
+                        <option value="mes">Este Mês</option>
+                        <option value="custom">Personalizado (Data Inicial e Final)</option>
+                    </select>
+
+                    <div id="grupo-datas-custom" class="flex hidden" style="margin-top: 10px;">
+                        <div class="flex-1">
+                            <label style="font-size: 12px;">Data Inicial:</label>
+                            <input type="date" id="data-inicio" onchange="renderAll()">
+                        </div>
+                        <div class="flex-1">
+                            <label style="font-size: 12px;">Data Final:</label>
+                            <input type="date" id="data-fim" onchange="renderAll()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RESUMO GERAL DO PERÍODO -->
+                <div class="flex" style="margin-bottom: 15px;">
+                    <div class="flex-1 stat-box">
+                        <div class="stat-title">Vendas Totais</div>
+                        <div class="stat-value" id="stat-vendas">R$ 0,00</div>
+                    </div>
+                    <div class="flex-1 stat-box">
+                        <div class="stat-title">Lucro Estimado</div>
+                        <div class="stat-value" id="stat-lucro" style="color: var(--secondary);">R$ 0,00</div>
+                    </div>
+                    <div class="flex-1 stat-box">
+                        <div class="stat-title">Total a Receber (Fiado)</div>
+                        <div class="stat-value" id="stat-fiado-pendente" style="color: var(--danger);">R$ 0,00</div>
+                    </div>
+                </div>
+
+                <h4 style="margin-bottom: 10px; color: #475569;">Entradas por Forma de Pagamento (Período Selecionado):</h4>
+                
+                <!-- DETALHAMENTO POR PAGAMENTO -->
+                <div class="flex">
+                    <div class="flex-1 stat-box">
+                        <div class="stat-title">💵 Dinheiro</div>
+                        <div class="stat-value" id="stat-dinheiro">R$ 0,00</div>
+                    </div>
+                    <div class="flex-1 stat-box">
+                        <div class="stat-title">⚡ PIX</div>
+                        <div class="stat-value" id="stat-pix">R$ 0,00</div>
+                    </div>
+                    <div class="flex-1 stat-box">
+                        <div class="stat-title">💳 Crédito</div>
+                        <div class="stat-value" id="stat-credito">R$ 0,00</div>
+                    </div>
+                    <div class="flex-1 stat-box">
+                        <div class="stat-title">💳 Débito</div>
+                        <div class="stat-value" id="stat-debito">R$ 0,00</div>
+                    </div>
+                    <div class="flex-1 stat-box">
+                        <div class="stat-title">📖 Fiado Gerado</div>
+                        <div class="stat-value" id="stat-fiado-gerado" style="color: var(--danger);">R$ 0,00</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Histórico de Transações do Período</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Pagamento</th>
+                            <th>Detalhes</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-historico"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // ESTADO DA APLICAÇÃO
+    let currentUser = null;
+    let tempFotoBase64 = '';
+    
+    let db = {
+        users: JSON.parse(localStorage.getItem('tsg_users')) || [],
+        produtos: JSON.parse(localStorage.getItem('tsg_produtos')) || [],
+        vendas: JSON.parse(localStorage.getItem('tsg_vendas')) || [],
+        fiados: JSON.parse(localStorage.getItem('tsg_fiados')) || {}
+    };
+
+    function saveData() {
+        localStorage.setItem('tsg_users', JSON.stringify(db.users));
+        localStorage.setItem('tsg_produtos', JSON.stringify(db.produtos));
+        localStorage.setItem('tsg_vendas', JSON.stringify(db.vendas));
+        localStorage.setItem('tsg_fiados', JSON.stringify(db.fiados));
+    }
+
+    // AUTENTICAÇÃO
+    function handleAuth(e) {
+        e.preventDefault();
+        const nome = document.getElementById('nome').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const pass = document.getElementById('password').value.trim();
+
+        let user = db.users.find(u => u.email === email);
+        
+        if(!user) {
+            user = { nome, email, pass };
+            db.users.push(user);
+            saveData();
+            alert(`Bem-vindo(a), ${nome}! Sua conta foi cadastrada com sucesso.`);
+        } else {
+            if(user.pass !== pass) {
+                alert("Senha incorreta!");
+                return;
+            }
+            if(nome) {
+                user.nome = nome;
+                saveData();
+            }
+        }
+
+        currentUser = user;
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('app-screen').classList.remove('hidden');
+        
+        document.getElementById('user-display').innerText = currentUser.nome || "Usuário";
+        document.getElementById('user-email').innerText = currentUser.email;
+        
+        renderAll();
+    }
+
+    function logout() {
+        currentUser = null;
+        document.getElementById('auth-screen').classList.remove('hidden');
+        document.getElementById('app-screen').classList.add('hidden');
+    }
+
+    // PROCESSAMENTO DE IMAGEM DA CÂMERA / GALERIA
+    function processarFoto(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                tempFotoBase64 = e.target.result;
+                const preview = document.getElementById('preview-foto');
+                preview.src = tempFotoBase64;
+                preview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // NAVEGAÇÃO
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+        event.target.classList.add('active');
+    }
+
+    // ESTOQUE
+    function salvarProduto() {
+        const nome = document.getElementById('prod-nome').value.trim();
+        const custo = parseFloat(document.getElementById('prod-custo').value);
+        const venda = parseFloat(document.getElementById('prod-venda').value);
+        const qtd = parseInt(document.getElementById('prod-qtd').value);
+
+        if(!nome || isNaN(custo) || isNaN(venda) || isNaN(qtd)) {
+            alert("Preencha todos os campos do produto!");
+            return;
+        }
+
+        const placeholderFoto = "https://via.placeholder.com/80?text=Sem+Foto";
+        const fotoFinal = tempFotoBase64 || placeholderFoto;
+
+        const index = db.produtos.findIndex(p => p.nome.toLowerCase() === nome.toLowerCase());
+        if(index >= 0) {
+            db.produtos[index] = { 
+                nome, 
+                custo, 
+                venda, 
+                qtd, 
+                foto: tempFotoBase64 || db.produtos[index].foto || placeholderFoto 
+            };
+        } else {
+            db.produtos.push({ nome, custo, venda, qtd, foto: fotoFinal });
+        }
+
+        saveData();
+        renderAll();
+        
+        document.getElementById('prod-nome').value = '';
+        document.getElementById('prod-custo').value = '';
+        document.getElementById('prod-venda').value = '';
+        document.getElementById('prod-qtd').value = '';
+        document.getElementById('prod-foto').value = '';
+        document.getElementById('preview-foto').classList.add('hidden');
+        tempFotoBase64 = '';
+    }
+
+    function deletarProduto(index) {
+        if(confirm("Tem certeza que deseja excluir este produto do estoque?")) {
+            db.produtos.splice(index, 1);
+            saveData();
+            renderAll();
+        }
+    }
+
+    // CAIXA / VENDAS
+    function atualizarPrecoVenda() {
+        const prodNome = document.getElementById('venda-produto').value;
+        const qtd = parseInt(document.getElementById('venda-qtd').value) || 1;
+        const prod = db.produtos.find(p => p.nome === prodNome);
+
+        if(prod) {
+            document.getElementById('venda-total').value = (prod.venda * qtd).toFixed(2);
+        }
+    }
+
+    function toggleClienteFiado() {
+        const tipo = document.getElementById('venda-tipo').value;
+        const group = document.getElementById('group-cliente');
+        if(tipo === 'Fiado') group.classList.remove('hidden');
+        else group.classList.add('hidden');
+    }
+
+    function finalizarVenda() {
+        const prodNome = document.getElementById('venda-produto').value;
+        const qtd = parseInt(document.getElementById('venda-qtd').value);
+        const tipo = document.getElementById('venda-tipo').value;
+        const cliente = document.getElementById('venda-cliente').value.trim();
+
+        const prod = db.produtos.find(p => p.nome === prodNome);
+        if(!prod || prod.qtd < qtd) {
+            alert("Estoque insuficiente ou produto não selecionado!");
+            return;
+        }
+
+        if(tipo === 'Fiado' && !cliente) {
+            alert("Informe o nome do cliente para a venda fiada!");
+            return;
+        }
+
+        // Abater Estoque
+        prod.qtd -= qtd;
+
+        const total = prod.venda * qtd;
+        const lucro = (prod.venda - prod.custo) * qtd;
+
+        // Registrar Venda com Carimbo de Data/Hora Preciso (ISO Timestamp)
+        const venda = {
+            timestamp: new Date().getTime(),
+            data: new Date().toLocaleString('pt-BR'),
+            produto: prod.nome,
+            qtd,
+            total,
+            lucro,
+            tipo,
+            cliente: tipo === 'Fiado' ? cliente : '-'
+        };
+
+        db.vendas.push(venda);
+
+        // Se for fiado, adicionar à dívida do cliente
+        if(tipo === 'Fiado') {
+            db.fiados[cliente] = (db.fiados[cliente] || 0) + total;
+        }
+
+        saveData();
+        renderAll();
+        alert("Venda realizada com sucesso!");
+    }
+
+    // GESTÃO DE FIADO
+    function pagarFiado(cliente) {
+        const valor = parseFloat(prompt(`Quanto ${cliente} está pagando? Devido: R$ ${db.fiados[cliente].toFixed(2)}`));
+        if(!isNaN(valor) && valor > 0) {
+            db.fiados[cliente] -= valor;
+            if(db.fiados[cliente] <= 0) delete db.fiados[cliente];
+
+            // Registrar entrada no histórico
+            db.vendas.push({
+                timestamp: new Date().getTime(),
+                data: new Date().toLocaleString('pt-BR'),
+                produto: 'Pagamento de Fiado',
+                qtd: 1,
+                total: valor,
+                lucro: valor,
+                tipo: 'Pagamento Fiado',
+                cliente
+            });
+
+            saveData();
+            renderAll();
+        }
+    }
+
+    // FILTRO DE DATAS DO RELATÓRIO
+    function toggleFiltroDatas() {
+        const op = document.getElementById('filtro-periodo').value;
+        const customGroup = document.getElementById('grupo-datas-custom');
+        if(op === 'custom') customGroup.classList.remove('hidden');
+        else customGroup.classList.add('hidden');
+        renderAll();
+    }
+
+    function filtrarVendasPorPeriodo() {
+        const op = document.getElementById('filtro-periodo').value;
+        const agora = new Date();
+
+        return db.vendas.filter(v => {
+            const dataVenda = new Date(v.timestamp || 0);
+
+            if (op === 'hoje') {
+                return dataVenda.toDateString() === agora.toDateString();
+            } else if (op === '7dias') {
+                const limite7Dias = new Date();
+                limite7Dias.setDate(agora.getDate() - 7);
+                return dataVenda >= limite7Dias;
+            } else if (op === 'mes') {
+                return dataVenda.getMonth() === agora.getMonth() && dataVenda.getFullYear() === agora.getFullYear();
+            } else if (op === 'custom') {
+                const ini = document.getElementById('data-inicio').value;
+                const fim = document.getElementById('data-fim').value;
+                if (!ini || !fim) return true;
+                
+                const dIni = new Date(ini + "T00:00:00");
+                const dFim = new Date(fim + "T23:59:59");
+                return dataVenda >= dIni && dataVenda <= dFim;
+            }
+            return true; // 'todos'
+        });
+    }
+
+    // RENDERIZAÇÃO DA INTERFACE
+    function renderAll() {
+        // Renderizar Combo de Vendas
+        const selectProd = document.getElementById('venda-produto');
+        selectProd.innerHTML = db.produtos.map(p => `<option value="${p.nome}">${p.nome} (Estoque: ${p.qtd}) - R$ ${p.venda.toFixed(2)}</option>`).join('');
+        atualizarPrecoVenda();
+
+        // Renderizar Lista de Produtos com Fotos
+        document.getElementById('lista-produtos').innerHTML = db.produtos.map((p, i) => `
+            <tr>
+                <td><img src="${p.foto}" class="img-thumb" alt="${p.nome}"></td>
+                <td><b>${p.nome}</b></td>
+                <td>R$ ${p.custo.toFixed(2)}</td>
+                <td>R$ ${p.venda.toFixed(2)}</td>
+                <td>${p.qtd}</td>
+                <td><button onclick="deletarProduto(${i})" class="danger" style="padding: 4px 8px; width: auto;">Excluir</button></td>
+            </tr>
+        `).join('');
+
+        // Renderizar Fiados Pendentes
+        const listaFiado = document.getElementById('lista-fiado');
+        listaFiado.innerHTML = '';
+        let totalFiadoPendente = 0;
+
+        for(let cliente in db.fiados) {
+            totalFiadoPendente += db.fiados[cliente];
+            listaFiado.innerHTML += `
+                <tr>
+                    <td><b>${cliente}</b></td>
+                    <td style="color: var(--danger); font-weight: bold;">R$ ${db.fiados[cliente].toFixed(2)}</td>
+                    <td><button onclick="pagarFiado('${cliente}')" class="success" style="padding: 4px 8px; width: auto;">Abater / Pagar</button></td>
+                </tr>
+            `;
+        }
+
+        // Renderizar Relatório Filtrado
+        const vendasFiltradas = filtrarVendasPorPeriodo();
+        
+        let totalVendas = 0;
+        let totalLucro = 0;
+        let totalDinheiro = 0;
+        let totalPix = 0;
+        let totalCredito = 0;
+        let totalDebito = 0;
+        let totalFiadoGerado = 0;
+
+        document.getElementById('lista-historico').innerHTML = vendasFiltradas.slice().reverse().map(v => {
+            totalVendas += v.total;
+            totalLucro += v.lucro;
+
+            // Somatórios por Forma de Pagamento
+            if (v.tipo === 'Dinheiro') totalDinheiro += v.total;
+            else if (v.tipo === 'PIX') totalPix += v.total;
+            else if (v.tipo === 'Cartão de Crédito') totalCredito += v.total;
+            else if (v.tipo === 'Cartão de Débito') totalDebito += v.total;
+            else if (v.tipo === 'Fiado') totalFiadoGerado += v.total;
+            else if (v.tipo === 'Pagamento Fiado') totalDinheiro += v.total; // Entrou no caixa
+
+            // Classe da Tag visual
+            let badgeClass = 'badge-dinheiro';
+            if (v.tipo === 'PIX') badgeClass = 'badge-pix';
+            else if (v.tipo === 'Cartão de Crédito') badgeClass = 'badge-credito';
+            else if (v.tipo === 'Cartão de Débito') badgeClass = 'badge-debito';
+            else if (v.tipo === 'Fiado') badgeClass = 'badge-fiado';
+            else if (v.tipo === 'Pagamento Fiado') badgeClass = 'badge-pagamento-fiado';
+
+            return `
+                <tr>
+                    <td><small>${v.data}</small></td>
+                    <td><span class="badge ${badgeClass}">${v.tipo}</span></td>
+                    <td>${v.produto} (${v.qtd}x) ${v.cliente !== '-' ? '-> ' + v.cliente : ''}</td>
+                    <td><b>R$ ${v.total.toFixed(2)}</b></td>
+                </tr>
+            `;
+        }).join('');
+
+        // Atualizar Indicadores Globais e do Período
+        document.getElementById('stat-vendas').innerText = `R$ ${totalVendas.toFixed(2)}`;
+        document.getElementById('stat-lucro').innerText = `R$ ${totalLucro.toFixed(2)}`;
+        document.getElementById('stat-fiado-pendente').innerText = `R$ ${totalFiadoPendente.toFixed(2)}`;
+
+        // Atualizar Detalhamento por Forma de Pagamento
+        document.getElementById('stat-dinheiro').innerText = `R$ ${totalDinheiro.toFixed(2)}`;
+        document.getElementById('stat-pix').innerText = `R$ ${totalPix.toFixed(2)}`;
+        document.getElementById('stat-credito').innerText = `R$ ${totalCredito.toFixed(2)}`;
+        document.getElementById('stat-debito').innerText = `R$ ${totalDebito.toFixed(2)}`;
+        document.getElementById('stat-fiado-gerado').innerText = `R$ ${totalFiadoGerado.toFixed(2)}`;
+    }
+</script>
+
+</body>
+</html>

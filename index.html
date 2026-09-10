@@ -46,7 +46,7 @@
         .badge-credito { background: #fef3c7; color: #b45309; }
         .badge-debito { background: #e0f2fe; color: #0369a1; }
         .badge-fiado { background: #fef2f2; color: var(--danger); }
-        .badge-pagamento-fiado { background: #f0fdf4; color: var(--secondary); }
+        .badge-pagamento-fiado { background: #f0fdf4; color: var(--secondary); border: 1px solid #16a34a; }
         
         .hidden { display: none; }
         .stat-box { background: #f1f5f9; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0; }
@@ -196,7 +196,7 @@
             </div>
         </div>
 
-        <!-- ABA 4: RELATÓRIO E TRANSFORMAÇÕES -->
+        <!-- ABA 4: RELATÓRIO E BALANÇO -->
         <div id="tab-relatorio" class="tab-content hidden">
             <div class="card">
                 <h3>📊 Balanço Financeiro e Filtro de Período</h3>
@@ -227,7 +227,7 @@
                 <!-- RESUMO GERAL DO PERÍODO -->
                 <div class="flex" style="margin-bottom: 15px;">
                     <div class="flex-1 stat-box">
-                        <div class="stat-title">Vendas Totais</div>
+                        <div class="stat-title">Vendas Totais (Produtos)</div>
                         <div class="stat-value" id="stat-vendas">R$ 0,00</div>
                     </div>
                     <div class="flex-1 stat-box">
@@ -235,21 +235,21 @@
                         <div class="stat-value" id="stat-lucro" style="color: var(--secondary);">R$ 0,00</div>
                     </div>
                     <div class="flex-1 stat-box">
-                        <div class="stat-title">Total a Receber (Fiado)</div>
+                        <div class="stat-title">Fiado Pendente Geral</div>
                         <div class="stat-value" id="stat-fiado-pendente" style="color: var(--danger);">R$ 0,00</div>
                     </div>
                 </div>
 
-                <h4 style="margin-bottom: 10px; color: #475569;">Entradas por Forma de Pagamento (Período Selecionado):</h4>
+                <h4 style="margin-bottom: 10px; color: #475569;">Entradas Efetivas no Caixa (Período Selecionado):</h4>
                 
-                <!-- DETALHAMENTO POR PAGAMENTO -->
+                <!-- DETALHAMENTO POR ENTRADAS DE CAIXA -->
                 <div class="flex">
                     <div class="flex-1 stat-box">
-                        <div class="stat-title">💵 Dinheiro</div>
+                        <div class="stat-title">💵 Dinheiro Entrada</div>
                         <div class="stat-value" id="stat-dinheiro">R$ 0,00</div>
                     </div>
                     <div class="flex-1 stat-box">
-                        <div class="stat-title">⚡ PIX</div>
+                        <div class="stat-title">⚡ PIX Entrada</div>
                         <div class="stat-value" id="stat-pix">R$ 0,00</div>
                     </div>
                     <div class="flex-1 stat-box">
@@ -273,7 +273,7 @@
                     <thead>
                         <tr>
                             <th>Data</th>
-                            <th>Pagamento</th>
+                            <th>Tipo / Pagamento</th>
                             <th>Detalhes</th>
                             <th>Valor</th>
                         </tr>
@@ -312,7 +312,7 @@
         }
     }
 
-    // VERIFICAÇÃO AUTOMÁTICA DE SESSÃO SALVA (AUTO-LOGIN)
+    // AUTO-LOGIN (SESSÃO SALVA)
     window.addEventListener('DOMContentLoaded', () => {
         const savedEmail = localStorage.getItem('tsg_session');
         if (savedEmail) {
@@ -376,7 +376,7 @@
         document.getElementById('app-screen').classList.add('hidden');
     }
 
-    // OTIMIZAÇÃO E COMPRESSÃO DE IMAGEM DA CÂMERA / GALERIA (ESTABILIDADE DE MEMÓRIA)
+    // COMPRESSÃO E OTIMIZAÇÃO DE FOTO
     function processarFoto(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -385,7 +385,6 @@
         reader.onload = function(e) {
             const img = new Image();
             img.onload = function() {
-                // Redimensiona mantendo proporção para no máximo 300px (Reduz o uso de memória em ~98%)
                 const canvas = document.createElement('canvas');
                 const maxDim = 300;
                 let width = img.width;
@@ -408,7 +407,6 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
 
-                // Exporta como JPEG comprimido
                 tempFotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
 
                 const preview = document.getElementById('preview-foto');
@@ -518,7 +516,7 @@
         const total = prod.venda * qtd;
         const lucro = (prod.venda - prod.custo) * qtd;
 
-        // Registrar Venda com Carimbo de Data/Hora Preciso
+        // Registrar Venda
         const venda = {
             timestamp: new Date().getTime(),
             data: new Date().toLocaleString('pt-BR'),
@@ -542,27 +540,46 @@
         alert("Venda realizada com sucesso!");
     }
 
-    // GESTÃO DE FIADO
+    // GESTÃO DE FIADO (CORRIGIDO PARA NÃO DUPLICAR FATURAMENTO/LUCRO)
     function pagarFiado(cliente) {
-        const valor = parseFloat(prompt(`Quanto ${cliente} está pagando? Devido: R$ ${db.fiados[cliente].toFixed(2)}`));
-        if(!isNaN(valor) && valor > 0) {
-            db.fiados[cliente] -= valor;
-            if(db.fiados[cliente] <= 0) delete db.fiados[cliente];
+        const valorDevido = db.fiados[cliente] || 0;
+        const valorPagar = parseFloat(prompt(`Quanto ${cliente} está pagando?\nDevido Atual: R$ ${valorDevido.toFixed(2)}`));
 
-            // Registrar entrada no histórico
+        if(!isNaN(valorPagar) && valorPagar > 0) {
+            const opcaoForma = prompt(
+                `Escolha a FORMA DE PAGAMENTO recebida do cliente ${cliente}:\n\n` +
+                `1 - Dinheiro\n` +
+                `2 - PIX\n` +
+                `3 - Cartão de Débito\n` +
+                `4 - Cartão de Crédito`, 
+                "1"
+            );
+
+            let formaRecebimento = "Dinheiro";
+            if (opcaoForma === "2") formaRecebimento = "PIX";
+            else if (opcaoForma === "3") formaRecebimento = "Cartão de Débito";
+            else if (opcaoForma === "4") formaRecebimento = "Cartão de Crédito";
+
+            // Abater a dívida do cliente
+            db.fiados[cliente] -= valorPagar;
+            if(db.fiados[cliente] <= 0.001) delete db.fiados[cliente];
+
+            // Registrar entrada de caixa do fiado (Sem somar como "Venda de Produto" nova)
             db.vendas.push({
                 timestamp: new Date().getTime(),
                 data: new Date().toLocaleString('pt-BR'),
-                produto: 'Pagamento de Fiado',
+                produto: 'Recebimento de Fiado',
                 qtd: 1,
-                total: valor,
-                lucro: valor,
+                total: valorPagar,
+                lucro: 0, // Lucro zero pois o lucro já foi registrado na venda inicial do produto
                 tipo: 'Pagamento Fiado',
+                formaPagamento: formaRecebimento,
                 cliente
             });
 
             saveData();
             renderAll();
+            alert(`Pagamento de R$ ${valorPagar.toFixed(2)} (${formaRecebimento}) recebido de ${cliente} com sucesso!`);
         }
     }
 
@@ -603,7 +620,7 @@
         });
     }
 
-    // RENDERIZAÇÃO DA INTERFACE
+    // RENDERIZAÇÃO DA INTERFACE COM CÁLCULO FINANCEIRO CORRETO
     function renderAll() {
         // Renderizar Combo de Vendas
         const selectProd = document.getElementById('venda-produto');
@@ -650,16 +667,33 @@
         let totalFiadoGerado = 0;
 
         document.getElementById('lista-historico').innerHTML = vendasFiltradas.slice().reverse().map(v => {
-            totalVendas += v.total;
-            totalLucro += v.lucro;
+            const isPagamentoFiado = (v.tipo === 'Pagamento Fiado');
 
-            // Somatórios por Forma de Pagamento
-            if (v.tipo === 'Dinheiro') totalDinheiro += v.total;
-            else if (v.tipo === 'PIX') totalPix += v.total;
-            else if (v.tipo === 'Cartão de Crédito') totalCredito += v.total;
-            else if (v.tipo === 'Cartão de Débito') totalDebito += v.total;
-            else if (v.tipo === 'Fiado') totalFiadoGerado += v.total;
-            else if (v.tipo === 'Pagamento Fiado') totalDinheiro += v.total;
+            // 1. APENAS VENDAS DE MERCADORIAS SOMAM EM VENDAS TOTAIS E LUCRO (Sem duplicar ao receber fiado)
+            if (!isPagamentoFiado) {
+                totalVendas += v.total;
+                totalLucro += v.lucro;
+            }
+
+            // 2. SOMATÓRIO DAS ENTRADAS EFETIVAS NO CAIXA
+            if (v.tipo === 'Dinheiro') {
+                totalDinheiro += v.total;
+            } else if (v.tipo === 'PIX') {
+                totalPix += v.total;
+            } else if (v.tipo === 'Cartão de Crédito') {
+                totalCredito += v.total;
+            } else if (v.tipo === 'Cartão de Débito') {
+                totalDebito += v.total;
+            } else if (v.tipo === 'Fiado') {
+                totalFiadoGerado += v.total;
+            } else if (isPagamentoFiado) {
+                // Pagamento de Fiado entra na forma em que foi pago (padrão Dinheiro)
+                const forma = v.formaPagamento || 'Dinheiro';
+                if (forma === 'PIX') totalPix += v.total;
+                else if (forma === 'Cartão de Crédito') totalCredito += v.total;
+                else if (forma === 'Cartão de Débito') totalDebito += v.total;
+                else totalDinheiro += v.total;
+            }
 
             // Classe da Tag visual
             let badgeClass = 'badge-dinheiro';
@@ -667,24 +701,26 @@
             else if (v.tipo === 'Cartão de Crédito') badgeClass = 'badge-credito';
             else if (v.tipo === 'Cartão de Débito') badgeClass = 'badge-debito';
             else if (v.tipo === 'Fiado') badgeClass = 'badge-fiado';
-            else if (v.tipo === 'Pagamento Fiado') badgeClass = 'badge-pagamento-fiado';
+            else if (isPagamentoFiado) badgeClass = 'badge-pagamento-fiado';
+
+            const tagTexto = isPagamentoFiado ? `Receb. Fiado (${v.formaPagamento || 'Dinheiro'})` : v.tipo;
 
             return `
                 <tr>
                     <td><small>${v.data}</small></td>
-                    <td><span class="badge ${badgeClass}">${v.tipo}</span></td>
+                    <td><span class="badge ${badgeClass}">${tagTexto}</span></td>
                     <td>${v.produto} (${v.qtd}x) ${v.cliente !== '-' ? '-> ' + v.cliente : ''}</td>
                     <td><b>R$ ${v.total.toFixed(2)}</b></td>
                 </tr>
             `;
         }).join('');
 
-        // Atualizar Indicadores Globais e do Período
+        // Atualizar Indicadores Globais
         document.getElementById('stat-vendas').innerText = `R$ ${totalVendas.toFixed(2)}`;
         document.getElementById('stat-lucro').innerText = `R$ ${totalLucro.toFixed(2)}`;
         document.getElementById('stat-fiado-pendente').innerText = `R$ ${totalFiadoPendente.toFixed(2)}`;
 
-        // Atualizar Detalhamento por Forma de Pagamento
+        // Atualizar Detalhamento de Entradas no Caixa
         document.getElementById('stat-dinheiro').innerText = `R$ ${totalDinheiro.toFixed(2)}`;
         document.getElementById('stat-pix').innerText = `R$ ${totalPix.toFixed(2)}`;
         document.getElementById('stat-credito').innerText = `R$ ${totalCredito.toFixed(2)}`;
